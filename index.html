@@ -204,6 +204,37 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 .upload-status{margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;display:none}
 .upload-status.success{background:var(--green-s);color:var(--green);border:1px solid rgba(26,122,60,.2)}
 .upload-status.error{background:var(--red-s);color:var(--red);border:1px solid rgba(192,57,43,.2)}
+
+/* REMARKS */
+.remarks-input{width:100%;padding:5px 8px;border:1px solid var(--border2);border-radius:4px;font-family:var(--sans);font-size:12px;color:var(--text);background:#fff;outline:none;resize:vertical;min-height:40px;transition:border-color .2s}
+.remarks-input:focus{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(26,92,180,.08)}
+.date-input{padding:5px 8px;border:1px solid var(--border2);border-radius:4px;font-family:var(--sans);font-size:12px;color:var(--text);background:#fff;outline:none;cursor:pointer;transition:border-color .2s}
+.date-input:focus{border-color:var(--accent2)}
+.save-btn{padding:5px 12px;background:var(--accent);color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .2s}
+.save-btn:hover{background:var(--accent2)}
+.save-btn.saved{background:var(--green)}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;white-space:nowrap}
+.status-open{background:#fff3cd;color:#856404;border:1px solid #ffc107}
+.status-done{background:#d4edda;color:#155724;border:1px solid #28a745}
+.status-overdue{background:#fee2e2;color:#991b1b;border:1px solid #dc3545}
+.days-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;font-family:var(--mono)}
+.days-today{background:#fff3cd;color:#856404}
+.days-upcoming{background:#d1ecf1;color:#0c5460}
+.days-overdue{background:#fee2e2;color:#991b1b}
+.days-done{background:#d4edda;color:#155724}
+/* REMINDER CARDS */
+.reminder-day-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm)}
+.reminder-day-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.reminder-day-card.selected{border-color:var(--accent2);background:var(--accent-glow)}
+.reminder-day-card.has-items{border-left:4px solid var(--orange)}
+.reminder-day-card.today-card{border-left:4px solid var(--red)}
+.reminder-day-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.reminder-day-date{font-size:11px;color:var(--text2);font-family:var(--mono);margin-bottom:14px}
+.reminder-day-count{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--text);margin-bottom:4px}
+.reminder-day-sub{font-size:11px;color:var(--text2)}
+.reminder-bm-breakdown{margin-top:10px;font-size:11px;color:var(--text2)}
+.reminder-bm-item{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #edf2f7}
+.reminder-bm-item:last-child{border-bottom:none}
 </style>
 </head>
 <body>
@@ -257,6 +288,8 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     <div class="tab-row">
       <button class="tab-btn active" id="tab-cases" onclick="switchTab('cases')">&#128203; Case Details</button>
       <button class="tab-btn" id="tab-bank" onclick="switchTab('bank')">&#127981; Bank-wise Pending</button>
+      <button class="tab-btn" id="tab-remarks" onclick="switchTab('remarks')">&#128221; BM Remarks</button>
+      <button class="tab-btn" id="tab-reminders" onclick="switchTab('reminders')">&#128276; Reminders</button>
     </div>
 
     <div class="kpi-row">
@@ -363,6 +396,80 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
             </thead>
             <tbody id="bank-tbl-body"></tbody>
             <tfoot id="bank-tbl-foot"></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  <!-- ===== REMARKS TAB ===== -->
+    <div id="section-remarks" style="display:none">
+      <div id="bm-remarks-panel" style="display:none">
+        <div class="section-label">Add / Edit Remarks for Your Cases</div>
+        <div class="filters-row" style="margin-bottom:12px">
+          <input class="search-box" id="remarks-search" placeholder="Search loan ID, customer, dealer..." oninput="renderRemarksTable()">
+          <select class="filter-select" id="remarks-pendency-filter" onchange="renderRemarksTable()"><option value="">All Pendency</option></select>
+          <button class="reset-btn" onclick="el('remarks-search').value='';el('remarks-pendency-filter').value='';renderRemarksTable()">Reset</button>
+        </div>
+        <div class="table-card">
+          <div class="table-header-row"><div class="table-count" id="remarks-count">0 cases</div></div>
+          <div class="table-wrap">
+            <table class="main-tbl" style="min-width:1000px">
+              <thead><tr>
+                <th>Loan ID</th><th>Customer</th><th>Dealer</th><th>PDD Age</th><th>Pendency</th>
+                <th>BM Remark</th><th>Commitment Date</th><th>Status</th><th>Save</th>
+              </tr></thead>
+              <tbody id="remarks-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div id="am-rh-remarks-panel" style="display:none">
+        <div class="section-label">BM Remarks &amp; Commitment Timelines</div>
+        <div class="filters-row" style="margin-bottom:12px">
+          <input class="search-box" id="view-remarks-search" placeholder="Search loan ID, customer, BM..." oninput="renderViewRemarks()">
+          <select class="filter-select" id="view-bm-filter" onchange="renderViewRemarks()"><option value="">All BMs</option></select>
+          <select class="filter-select" id="view-date-filter" onchange="renderViewRemarks()">
+            <option value="">All Dates</option>
+            <option value="today">Today</option>
+            <option value="tomorrow">Tomorrow</option>
+            <option value="day2">Day After Tomorrow</option>
+            <option value="overdue">Overdue</option>
+            <option value="upcoming">Next 7 Days</option>
+          </select>
+          <select class="filter-select" id="view-pendency-filter" onchange="renderViewRemarks()"><option value="">All Pendency</option></select>
+          <button class="reset-btn" onclick="resetViewRemarks()">Reset</button>
+        </div>
+        <div class="table-card">
+          <div class="table-header-row"><div class="table-count" id="view-remarks-count">0 cases</div></div>
+          <div class="table-wrap">
+            <table class="main-tbl" style="min-width:1100px">
+              <thead><tr>
+                <th>Loan ID</th><th>Customer</th><th>Dealer</th><th>PDD Age</th><th>Pendency</th>
+                <th>BM Name</th><th>BM Remark</th><th>Commitment Date</th><th>Status</th><th>Days Left</th>
+              </tr></thead>
+              <tbody id="view-remarks-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== REMINDERS TAB ===== -->
+    <div id="section-reminders" style="display:none">
+      <div class="section-label">&#128276; Commitment Reminders &mdash; Today &amp; Next 2 Days</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px" id="reminder-day-grid"></div>
+      <div class="table-card" id="reminder-detail-card" style="display:none">
+        <div class="table-header-row">
+          <div class="table-count" id="reminder-detail-title">Cases</div>
+          <button class="reset-btn" onclick="el('reminder-detail-card').style.display='none';document.querySelectorAll('.reminder-day-card').forEach(function(c){c.classList.remove('selected')})">&#10005; Close</button>
+        </div>
+        <div class="table-wrap">
+          <table class="main-tbl" style="min-width:900px">
+            <thead><tr>
+              <th>Loan ID</th><th>Customer</th><th>Dealer</th><th>PDD Age</th><th>Pendency</th>
+              <th>BM Name</th><th>BM Remark</th><th>Commitment Date</th><th>Status</th>
+            </tr></thead>
+            <tbody id="reminder-detail-body"></tbody>
           </table>
         </div>
       </div>
@@ -502,7 +609,11 @@ function switchTab(tab){
   el('tab-'+tab).classList.add('active');
   el('section-cases').style.display=tab==='cases'?'block':'none';
   el('section-bank').style.display=tab==='bank'?'block':'none';
+  el('section-remarks').style.display=tab==='remarks'?'block':'none';
+  el('section-reminders').style.display=tab==='reminders'?'block':'none';
   if(tab==='bank'){renderBankCharts(filteredData.length?filteredData:getMyData());renderBankTable();}
+  if(tab==='remarks'){initRemarksTab();}
+  if(tab==='reminders'){renderReminders();}
 }
 
 /* ===== DATA SCOPE ===== */
@@ -677,10 +788,14 @@ function refreshAll(){
     if(amAgeFilter)amAgeFilter.style.display='block';
     buildAMAgeing();
   }
+  /* Show/hide remarks tab based on role */
+  var tabRemarks=el('tab-remarks');var tabReminders=el('tab-reminders');
+  if(tabRemarks){tabRemarks.style.display='inline-block';}
+  if(tabReminders){tabReminders.style.display=currentRole!=='bm'?'inline-block':'none';}
   applyFilters();
 }
 
-/* ===== FILTERS ===== */
+/* ===== FILTERS ==== */
 function applyFilters(){
   var base=getMyData();
   var q=(el('search-box')?el('search-box').value:'').toLowerCase();
@@ -972,6 +1087,379 @@ function exportCSV(){
   var rows=[cols.join(',')];filteredData.forEach(function(r){rows.push(cols.map(function(c){return '"'+String(r[c]||'').replace(/"/g,'""')+'"';}).join(','));});
   var blob=new Blob([rows.join('\n')],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='PDD_Export.csv';a.click();
 }
+/* ======================================================
+   REMARKS & REMINDERS SYSTEM
+   Storage: localStorage keyed by loan ID
+   Key format: 'pdd_remark_<LoanID>'
+   Value: JSON {remark, commitDate, status, bmName, bmUser, updatedAt}
+   ====================================================== */
+
+var REMARKS_KEY_PREFIX = 'pdd_remark_';
+
+function saveRemark(loanId, remark, commitDate, status) {
+  var data = {
+    remark: remark,
+    commitDate: commitDate,
+    status: status || 'Open',
+    bmName: currentUser,
+    bmDisplay: el('hdr-name') ? el('hdr-name').textContent : currentUser,
+    updatedAt: new Date().toISOString()
+  };
+  try { localStorage.setItem(REMARKS_KEY_PREFIX + loanId, JSON.stringify(data)); } catch(e){}
+  return data;
+}
+
+function getRemark(loanId) {
+  try {
+    var v = localStorage.getItem(REMARKS_KEY_PREFIX + loanId);
+    return v ? JSON.parse(v) : null;
+  } catch(e) { return null; }
+}
+
+function getAllRemarks() {
+  var result = {};
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf(REMARKS_KEY_PREFIX) === 0) {
+        var loanId = k.substring(REMARKS_KEY_PREFIX.length);
+        result[loanId] = JSON.parse(localStorage.getItem(k));
+      }
+    }
+  } catch(e) {}
+  return result;
+}
+
+function fmtDateIST(isoStr) {
+  if (!isoStr) return '';
+  var d = new Date(isoStr);
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function todayIST() {
+  var now = new Date();
+  var ist = new Date(now.getTime() + (5.5 * 3600000));
+  return ist.toISOString().substring(0, 10);
+}
+
+function daysFromToday(dateStr) {
+  if (!dateStr) return null;
+  var today = new Date(todayIST());
+  var target = new Date(dateStr);
+  var diff = Math.round((target - today) / 86400000);
+  return diff;
+}
+
+function getDayLabel(diff) {
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff === 2) return 'Day After Tomorrow';
+  if (diff < 0) return Math.abs(diff) + 'd Overdue';
+  return 'In ' + diff + ' days';
+}
+
+/* ---- INIT REMARKS TAB ---- */
+function initRemarksTab() {
+  /* Show correct panel */
+  var bmPanel = el('bm-remarks-panel');
+  var amPanel = el('am-rh-remarks-panel');
+  if (currentRole === 'bm') {
+    if (bmPanel) bmPanel.style.display = 'block';
+    if (amPanel) amPanel.style.display = 'none';
+    buildRemarksPendencyFilter();
+    renderRemarksTable();
+  } else {
+    if (bmPanel) bmPanel.style.display = 'none';
+    if (amPanel) amPanel.style.display = 'block';
+    buildViewBMFilter();
+    buildViewPendencyFilter();
+    renderViewRemarks();
+  }
+}
+
+/* ---- BM: BUILD PENDENCY FILTER ---- */
+function buildRemarksPendencyFilter() {
+  var sel = el('remarks-pendency-filter'); if (!sel) return;
+  var seen = {}; var opts = '<option value="">All Pendency</option>';
+  getMyData().forEach(function(r) {
+    if (r._pendency && !seen[r._pendency]) { seen[r._pendency] = true; opts += '<option>' + esc(r._pendency) + '</option>'; }
+  });
+  sel.innerHTML = opts;
+}
+
+/* ---- BM: RENDER REMARKS TABLE ---- */
+function renderRemarksTable() {
+  var tbody = el('remarks-table-body'); if (!tbody) return;
+  var q = (el('remarks-search') ? el('remarks-search').value : '').toLowerCase();
+  var pf = el('remarks-pendency-filter') ? el('remarks-pendency-filter').value : '';
+  var myData = getMyData().filter(function(r) {
+    if (q && (r['Loan ID'] || '').toLowerCase().indexOf(q) === -1 &&
+            (r['Customer Name'] || '').toLowerCase().indexOf(q) === -1 &&
+            (r['Dealer Name'] || '').toLowerCase().indexOf(q) === -1) return false;
+    if (pf && r._pendency !== pf) return false;
+    return true;
+  });
+  var tc = el('remarks-count'); if (tc) tc.textContent = myData.length + ' cases';
+  if (!myData.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No cases match</td></tr>'; return; }
+  var rows = '';
+  myData.forEach(function(r, i) {
+    var lid = r['Loan ID'] || '';
+    var saved = getRemark(lid);
+    var ag = r['PDD Ageing (Days)'];
+    var statusOpts = '<option value="Open"' + (!saved || saved.status === 'Open' ? ' selected' : '') + '>Open</option>' +
+                     '<option value="Done"' + (saved && saved.status === 'Done' ? ' selected' : '') + '>Done</option>';
+    rows += '<tr class="' + getRCls(ag) + '">' +
+      '<td><span class="loan-id">' + esc(lid) + '</span></td>' +
+      '<td style="font-size:12px">' + esc(r['Customer Name'] || '') + '</td>' +
+      '<td style="font-size:11px">' + esc((r['Dealer Name'] || '').substring(0, 18)) + '</td>' +
+      '<td><span class="ageing-badge ' + getACls(ag) + '">' + AGEING_LABELS[ag] + '</span></td>' +
+      '<td><span class="pendency-tag ' + getPCls(r._pendency) + '">' + esc(r._pendency || '—') + '</span></td>' +
+      '<td><textarea class="remarks-input" id="ri-' + i + '" rows="2" placeholder="Add remark / action taken...">' + esc(saved ? saved.remark : '') + '</textarea></td>' +
+      '<td><input type="date" class="date-input" id="rd-' + i + '" value="' + (saved ? saved.commitDate : '') + '" min="' + todayIST() + '"></td>' +
+      '<td><select class="filter-select" id="rs-' + i + '" style="width:90px;font-size:11px;margin-bottom:0">' + statusOpts + '</select></td>' +
+      '<td><button class="save-btn" id="rsb-' + i + '" onclick="saveBMRemark(\'' + lid.replace(/'/g, "\\'") + '\',' + i + ')">Save</button></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = rows;
+  /* Store loan IDs in a map for save function */
+  window._remarksLoanMap = {};
+  myData.forEach(function(r, i) { window._remarksLoanMap[i] = r['Loan ID']; });
+}
+
+function saveBMRemark(loanId, idx) {
+  var remark = el('ri-' + idx) ? el('ri-' + idx).value.trim() : '';
+  var date   = el('rd-' + idx) ? el('rd-' + idx).value : '';
+  var status = el('rs-' + idx) ? el('rs-' + idx).value : 'Open';
+  saveRemark(loanId, remark, date, status);
+  var btn = el('rsb-' + idx);
+  if (btn) { btn.textContent = 'Saved ✓'; btn.className = 'save-btn saved'; setTimeout(function() { btn.textContent = 'Save'; btn.className = 'save-btn'; }, 2000); }
+}
+
+/* ---- AM/RH: BUILD FILTERS ---- */
+function buildViewBMFilter() {
+  var sel = el('view-bm-filter'); if (!sel) return;
+  var myData = getMyData(); var seen = {};
+  var opts = '<option value="">All BMs</option>';
+  myData.forEach(function(r) {
+    if (r._bm && !seen[r._bm]) {
+      seen[r._bm] = true;
+      var lbl = r._bm.indexOf('@') > -1 ? r._bm.split('@')[0] : r._bm;
+      opts += '<option value="' + esc(r._bm) + '">' + esc(lbl) + '</option>';
+    }
+  });
+  sel.innerHTML = opts;
+}
+function buildViewPendencyFilter() {
+  var sel = el('view-pendency-filter'); if (!sel) return;
+  var seen = {}; var opts = '<option value="">All Pendency</option>';
+  getMyData().forEach(function(r) {
+    if (r._pendency && !seen[r._pendency]) { seen[r._pendency] = true; opts += '<option>' + esc(r._pendency) + '</option>'; }
+  });
+  sel.innerHTML = opts;
+}
+function resetViewRemarks() {
+  ['view-remarks-search','view-bm-filter','view-date-filter','view-pendency-filter'].forEach(function(id) {
+    var e = el(id); if (e) e.value = '';
+  });
+  renderViewRemarks();
+}
+
+/* ---- AM/RH: RENDER VIEW REMARKS ---- */
+function renderViewRemarks() {
+  var tbody = el('view-remarks-body'); if (!tbody) return;
+  var q  = (el('view-remarks-search') ? el('view-remarks-search').value : '').toLowerCase();
+  var bf = el('view-bm-filter') ? el('view-bm-filter').value : '';
+  var df = el('view-date-filter') ? el('view-date-filter').value : '';
+  var pf = el('view-pendency-filter') ? el('view-pendency-filter').value : '';
+  var allRemarks = getAllRemarks();
+  var today = todayIST();
+
+  /* Only show cases that have a BM remark with commitment date */
+  var myData = getMyData();
+  var rows_data = myData.filter(function(r) {
+    var lid = r['Loan ID'] || '';
+    var saved = allRemarks[lid];
+    if (!saved || !saved.commitDate) return false;
+    if (q && (lid).toLowerCase().indexOf(q) === -1 &&
+             (r['Customer Name'] || '').toLowerCase().indexOf(q) === -1 &&
+             (r._bm || '').toLowerCase().indexOf(q) === -1) return false;
+    if (bf && r._bm !== bf) return false;
+    if (pf && r._pendency !== pf) return false;
+    if (df) {
+      var diff = daysFromToday(saved.commitDate);
+      if (df === 'today' && diff !== 0) return false;
+      if (df === 'tomorrow' && diff !== 1) return false;
+      if (df === 'day2' && diff !== 2) return false;
+      if (df === 'overdue' && diff >= 0) return false;
+      if (df === 'upcoming' && (diff < 0 || diff > 7)) return false;
+    }
+    return true;
+  });
+
+  var tc = el('view-remarks-count'); if (tc) tc.textContent = rows_data.length + ' cases with commitments';
+
+  if (!rows_data.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No cases with BM commitments' + (df ? ' for selected period' : '') + '</td></tr>';
+    return;
+  }
+
+  /* Sort by commit date ascending */
+  rows_data.sort(function(a, b) {
+    var da = allRemarks[a['Loan ID']] ? allRemarks[a['Loan ID']].commitDate : '';
+    var db = allRemarks[b['Loan ID']] ? allRemarks[b['Loan ID']].commitDate : '';
+    return da.localeCompare(db);
+  });
+
+  var html_rows = '';
+  rows_data.forEach(function(r) {
+    var lid = r['Loan ID'] || '';
+    var saved = allRemarks[lid];
+    var ag = r['PDD Ageing (Days)'];
+    var diff = daysFromToday(saved.commitDate);
+    var dayLbl = getDayLabel(diff);
+    var dayClass = diff === 0 ? 'days-today' : diff < 0 ? 'days-overdue' : 'days-upcoming';
+    if (saved.status === 'Done') dayClass = 'days-done';
+    var statusClass = saved.status === 'Done' ? 'status-done' : diff < 0 ? 'status-overdue' : 'status-open';
+    var bmLbl = (r._bm || '').indexOf('@') > -1 ? r._bm.split('@')[0] : r._bm;
+    html_rows += '<tr class="' + getRCls(ag) + '">' +
+      '<td><span class="loan-id">' + esc(lid) + '</span></td>' +
+      '<td style="font-size:12px">' + esc(r['Customer Name'] || '') + '</td>' +
+      '<td style="font-size:11px">' + esc((r['Dealer Name'] || '').substring(0, 18)) + '</td>' +
+      '<td><span class="ageing-badge ' + getACls(ag) + '">' + AGEING_LABELS[ag] + '</span></td>' +
+      '<td><span class="pendency-tag ' + getPCls(r._pendency) + '">' + esc(r._pendency || '—') + '</span></td>' +
+      '<td style="font-size:11px;font-weight:600">' + esc(bmLbl || '') + '</td>' +
+      '<td style="font-size:12px;color:var(--text2);max-width:180px">' + esc(saved.remark || '—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:11px;font-weight:600">' + esc(saved.commitDate) + '</td>' +
+      '<td><span class="status-badge ' + statusClass + '">' + esc(saved.status || 'Open') + '</span></td>' +
+      '<td><span class="days-badge ' + dayClass + '">' + dayLbl + '</span></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html_rows;
+}
+
+/* ---- REMINDERS: RENDER 3-DAY CARDS ---- */
+function renderReminders() {
+  var grid = el('reminder-day-grid'); if (!grid) return;
+  var allRemarks = getAllRemarks();
+  var myData = getMyData();
+  var today = new Date(todayIST());
+
+  var days = [];
+  for (var d = 0; d < 3; d++) {
+    var dt = new Date(today.getTime() + d * 86400000);
+    var dtStr = dt.toISOString().substring(0, 10);
+    var label = d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : 'Day After Tomorrow';
+    var dateLabel = dt.toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+    days.push({ dtStr: dtStr, label: label, dateLabel: dateLabel, cases: [] });
+  }
+
+  myData.forEach(function(r) {
+    var lid = r['Loan ID'] || '';
+    var saved = allRemarks[lid];
+    if (!saved || !saved.commitDate || saved.status === 'Done') return;
+    days.forEach(function(day) {
+      if (saved.commitDate === day.dtStr) {
+        day.cases.push({ r: r, saved: saved });
+      }
+    });
+  });
+
+  grid.innerHTML = '';
+  days.forEach(function(day, idx) {
+    /* BM breakdown */
+    var bmBreak = {};
+    day.cases.forEach(function(item) {
+      var bm = item.r._bm || 'Unknown';
+      var lbl = bm.indexOf('@') > -1 ? bm.split('@')[0] : bm;
+      bmBreak[lbl] = (bmBreak[lbl] || 0) + 1;
+    });
+    var bmHtml = '';
+    Object.keys(bmBreak).sort().forEach(function(bm) {
+      bmHtml += '<div class="reminder-bm-item"><span>' + esc(bm) + '</span><strong>' + bmBreak[bm] + ' cases</strong></div>';
+    });
+
+    var card = document.createElement('div');
+    card.className = 'reminder-day-card' + (idx === 0 ? ' today-card' : '') + (day.cases.length > 0 ? ' has-items' : '');
+    card.innerHTML =
+      '<div class="reminder-day-title">' + day.label + '</div>' +
+      '<div class="reminder-day-date">' + day.dateLabel + '</div>' +
+      '<div class="reminder-day-count">' + day.cases.length + '</div>' +
+      '<div class="reminder-day-sub">commitment' + (day.cases.length !== 1 ? 's' : '') + ' due</div>' +
+      (bmHtml ? '<div class="reminder-bm-breakdown">' + bmHtml + '</div>' : '');
+
+    if (day.cases.length > 0) {
+      (function(dayCopy) {
+        card.onclick = function() {
+          document.querySelectorAll('.reminder-day-card').forEach(function(c) { c.classList.remove('selected'); });
+          card.classList.add('selected');
+          showReminderDetail(dayCopy);
+        };
+      })(day);
+    }
+    grid.appendChild(card);
+  });
+
+  /* Also show overdue count */
+  var overdueData = myData.filter(function(r) {
+    var saved = allRemarks[r['Loan ID'] || ''];
+    if (!saved || !saved.commitDate || saved.status === 'Done') return false;
+    return daysFromToday(saved.commitDate) < 0;
+  });
+  if (overdueData.length > 0) {
+    var overdueCard = document.createElement('div');
+    overdueCard.style.gridColumn = '1 / -1';
+    overdueCard.className = 'reminder-day-card';
+    overdueCard.style.borderLeft = '4px solid #991b1b';
+    overdueCard.innerHTML =
+      '<div class="reminder-day-title" style="color:#991b1b">&#9888; Overdue Commitments</div>' +
+      '<div class="reminder-day-count" style="color:#991b1b">' + overdueData.length + '</div>' +
+      '<div class="reminder-day-sub">past commitment dates — follow up immediately</div>';
+    overdueCard.onclick = function() {
+      document.querySelectorAll('.reminder-day-card').forEach(function(c) { c.classList.remove('selected'); });
+      overdueCard.classList.add('selected');
+      showReminderDetail({ label: 'Overdue', cases: overdueData.map(function(r) {
+        return { r: r, saved: allRemarks[r['Loan ID'] || ''] };
+      }) });
+    };
+    grid.appendChild(overdueCard);
+  }
+
+  if (days.every(function(d) { return d.cases.length === 0; }) && overdueData.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3)">&#9989; No pending commitments for today or next 2 days.</div>';
+  }
+}
+
+function showReminderDetail(day) {
+  var card = el('reminder-detail-card');
+  var title = el('reminder-detail-title');
+  var tbody = el('reminder-detail-body');
+  if (!card || !tbody) return;
+  card.style.display = 'block';
+  if (title) title.textContent = day.label + ' — ' + day.cases.length + ' commitment(s)';
+  if (!day.cases.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No cases</td></tr>'; return; }
+  var rows = '';
+  day.cases.forEach(function(item) {
+    var r = item.r; var saved = item.saved;
+    var ag = r['PDD Ageing (Days)'];
+    var diff = daysFromToday(saved.commitDate);
+    var statusClass = saved.status === 'Done' ? 'status-done' : diff < 0 ? 'status-overdue' : 'status-open';
+    var bmLbl = (r._bm || '').indexOf('@') > -1 ? r._bm.split('@')[0] : r._bm;
+    rows += '<tr class="' + getRCls(ag) + '">' +
+      '<td><span class="loan-id">' + esc(r['Loan ID'] || '') + '</span></td>' +
+      '<td style="font-size:12px">' + esc(r['Customer Name'] || '') + '</td>' +
+      '<td style="font-size:11px">' + esc((r['Dealer Name'] || '').substring(0, 18)) + '</td>' +
+      '<td><span class="ageing-badge ' + getACls(ag) + '">' + AGEING_LABELS[ag] + '</span></td>' +
+      '<td><span class="pendency-tag ' + getPCls(r._pendency) + '">' + esc(r._pendency || '—') + '</span></td>' +
+      '<td style="font-size:11px;font-weight:600">' + esc(bmLbl || '') + '</td>' +
+      '<td style="font-size:12px;color:var(--text2)">' + esc(saved.remark || '—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:11px;font-weight:600">' + esc(saved.commitDate) + '</td>' +
+      '<td><span class="status-badge ' + statusClass + '">' + esc(saved.status || 'Open') + '</span></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = rows;
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeUpload();}});
 window.addEventListener('DOMContentLoaded',function(){
   initLogin();
