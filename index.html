@@ -1107,10 +1107,32 @@ function todayIST(){
   var ist=new Date(n.getTime()+(5.5*3600000));
   return ist.toISOString().substring(0,10);
 }
+function normaliseDate(ds){
+  /* Convert ANY date format to YYYY-MM-DD */
+  if(!ds)return '';
+  var s=String(ds).trim();
+  /* Already YYYY-MM-DD */
+  if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.substring(0,10);
+  /* dd-MM-yyyy */
+  if(/^\d{2}-\d{2}-\d{4}/.test(s)){var p=s.split('-');return p[2]+'-'+p[1]+'-'+p[0];}
+  /* dd/MM/yyyy */
+  if(/^\d{2}\/\d{2}\/\d{4}/.test(s)){var p=s.split('/');return p[2]+'-'+p[1]+'-'+p[0];}
+  /* Full JS Date string like "Mon Apr 27 2026 00:00:00 GMT+0530..." */
+  /* Try parsing as a date and reformatting */
+  try{
+    var d=new Date(s);
+    if(!isNaN(d.getTime())){
+      var yr=d.getFullYear();
+      var mo=String(d.getMonth()+1).padStart(2,'0');
+      var dy=String(d.getDate()).padStart(2,'0');
+      return yr+'-'+mo+'-'+dy;
+    }
+  }catch(e){}
+  return '';
+}
 function daysFromToday(ds){
   if(!ds)return null;
-  /* Normalise: take only first 10 chars (YYYY-MM-DD) and parse at midnight */
-  var clean=String(ds).trim().substring(0,10);
+  var clean=normaliseDate(ds);
   if(!clean||clean.length<10)return null;
   var t=new Date(todayIST()+'T00:00:00');
   var d=new Date(clean+'T00:00:00');
@@ -1118,6 +1140,7 @@ function daysFromToday(ds){
   return Math.round((d-t)/86400000);
 }
 function getDayLabel(diff){
+  if(diff===null||diff===undefined||isNaN(diff))return '—';
   if(diff===0)return 'Today';
   if(diff===1)return 'Tomorrow';
   if(diff===2)return 'Day After';
@@ -1140,7 +1163,7 @@ function fetchAndCacheRemarks(){
           if(rowLid){
             _remarksCache[rowLid]={
               remark:    row['Remark']||'',
-              commitDate:row['Commit Date']||'',
+              commitDate:normaliseDate(row['Commit Date']||''),
               status:    row['Status']||'Open',
               bmUser:    row['BM User']||'',
               bmDisplay: row['BM Display Name']||''
@@ -1181,7 +1204,7 @@ function fetchRemarksAndRender(callback){
           if(rowLid){
             _remarksCache[rowLid]={
               remark:    row['Remark']||'',
-              commitDate:row['Commit Date']||'',
+              commitDate:normaliseDate(row['Commit Date']||''),
               status:    row['Status']||'Open',
               bmUser:    row['BM User']||'',
               bmDisplay: row['BM Display Name']||''
@@ -1266,7 +1289,7 @@ function getBMRemarkCell(loanId,idx,r){
   var saved=_remarksCache[loanId]||null;
   var isBM=(currentRole==='bm');
   var remark=saved?saved.remark:'';
-  var commitDate=saved?saved.commitDate:'';
+  var commitDate=saved?normaliseDate(saved.commitDate):'';
   var status=saved?saved.status:'Open';
   var today=todayIST();
 
@@ -1315,7 +1338,8 @@ function saveBMRemark(btnEl){
   var pddAge    =td?td.getAttribute('data-age'):'';
   var pendency  =td?td.getAttribute('data-pend'):'';
   var remark    =el('bri-'+idx)?el('bri-'+idx).value.trim():'';
-  var commitDate=el('brd-'+idx)?el('brd-'+idx).value:'';
+  var rawDate   =el('brd-'+idx)?el('brd-'+idx).value:'';
+  var commitDate=rawDate?normaliseDate(rawDate):''; /* Always store as YYYY-MM-DD */
   var status    =el('brs-'+idx)?el('brs-'+idx).value:'Open';
   var bmDisplay =el('hdr-name')?el('hdr-name').textContent:currentUser;
   if(!loanId){console.warn('saveBMRemark: no loanId found');return;}
@@ -1365,7 +1389,7 @@ function mergeRemarksFromCSV(records){
     var bStatus=r['Remark Status']||r['remark_status']||'';
     if(lid&&(bRemark||bDate)){
       _remarksCache[lid]={
-        remark:bRemark,commitDate:bDate,
+        remark:bRemark,commitDate:normaliseDate(bDate),
         status:bStatus||'Open',
         bmUser:'',bmDisplay:''
       };
@@ -1437,8 +1461,8 @@ function renderReminders(){
     if(!saved||!saved.commitDate)return;
     if(saved.status==='Done')return; /* skip resolved */
 
-    /* Normalise date: strip time part if any, trim spaces */
-    var cd=String(saved.commitDate).trim().substring(0,10);
+    /* Normalise date: handle any format */
+    var cd=normaliseDate(saved.commitDate);
     if(!cd)return;
 
     var diff=daysFromToday(cd);
