@@ -230,6 +230,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 .reminder-day-card.selected{border-color:var(--accent2);background:var(--accent-glow)}
 .reminder-day-card.has-items{border-left:4px solid var(--orange)}
 .reminder-day-card.today-card{border-left:4px solid var(--red)}
+@media(max-width:900px){#reminder-day-grid{grid-template-columns:repeat(2,1fr)!important}}
 .reminder-day-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
 .reminder-day-date{font-size:11px;color:var(--text2);font-family:var(--mono);margin-bottom:12px}
 .reminder-day-count{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--text);margin-bottom:2px}
@@ -451,7 +452,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
           <button class="export-btn" onclick="exportRemarksCSV()">&#8595; Export Remarks CSV</button>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px" id="reminder-day-grid"></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px" id="reminder-day-grid"></div>
       <div class="table-card" id="reminder-detail-card" style="display:none">
         <div class="table-header-row">
           <div class="table-count" id="reminder-detail-title">Cases</div>
@@ -1108,7 +1109,12 @@ function todayIST(){
 }
 function daysFromToday(ds){
   if(!ds)return null;
-  var t=new Date(todayIST()),d=new Date(ds);
+  /* Normalise: take only first 10 chars (YYYY-MM-DD) and parse at midnight */
+  var clean=String(ds).trim().substring(0,10);
+  if(!clean||clean.length<10)return null;
+  var t=new Date(todayIST()+'T00:00:00');
+  var d=new Date(clean+'T00:00:00');
+  if(isNaN(d.getTime()))return null;
   return Math.round((d-t)/86400000);
 }
 function getDayLabel(diff){
@@ -1394,69 +1400,111 @@ function buildReminderFilters(){
 
 function renderReminders(){
   var grid=el('reminder-day-grid');if(!grid)return;
-  var bmF =el('rem-bm-filter')?el('rem-bm-filter').value:'';
-  var pF  =el('rem-pendency-filter')?el('rem-pendency-filter').value:'';
+  var bmF=el('rem-bm-filter')?el('rem-bm-filter').value:'';
+  var pF =el('rem-pendency-filter')?el('rem-pendency-filter').value:'';
+
+  /* Scope to current user's data */
   var myData=getMyData().filter(function(r){
     if(bmF&&r._bm!==bmF)return false;
     if(pF&&r._pendency!==pF)return false;
     return true;
   });
-  var today=new Date(todayIST());
-  var days=[];
-  for(var d=0;d<3;d++){
-    var dt=new Date(today.getTime()+d*86400000);
-    var ds=dt.toISOString().substring(0,10);
-    days.push({ds:ds,label:d===0?'Today':d===1?'Tomorrow':'Day After Tomorrow',
-      dateLabel:dt.toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'short',year:'numeric'}),
-      cases:[]});
+
+  var todayStr=todayIST();
+  var todayDt =new Date(todayStr);
+
+  /* Build date strings for 3 days */
+  function addDays(base,n){
+    var d=new Date(new Date(base).getTime()+n*86400000);
+    return d.toISOString().substring(0,10);
   }
-  var overdueList=[];
+  var day0=todayStr;
+  var day1=addDays(todayStr,1);
+  var day2=addDays(todayStr,2);
+
+  /* Buckets */
+  var buckets={
+    today:   {label:'Today',            dateLabel:fmtDayLabel(day0),col:'#c0392b',cases:[]},
+    tmrw:    {label:'Tomorrow',         dateLabel:fmtDayLabel(day1),col:'#c05621',cases:[]},
+    day2:    {label:'Day After Tomorrow',dateLabel:fmtDayLabel(day2),col:'#d97706',cases:[]},
+    expired: {label:'Expired — Not Resolved',dateLabel:'Past commitment dates',col:'#7c3aed',cases:[]}
+  };
+
+  /* Categorise each case with a remark into a bucket */
   myData.forEach(function(r){
-    var lid=r['Loan ID']||'';
+    var lid=String(r['Loan ID']||'').trim();
     var saved=_remarksCache[lid];
-    if(!saved||!saved.commitDate||saved.status==='Done')return;
-    var diff=daysFromToday(saved.commitDate);
-    days.forEach(function(day){if(saved.commitDate===day.ds)day.cases.push({r:r,saved:saved});});
-    if(diff<0)overdueList.push({r:r,saved:saved});
+    if(!saved||!saved.commitDate)return;
+    if(saved.status==='Done')return; /* skip resolved */
+
+    /* Normalise date: strip time part if any, trim spaces */
+    var cd=String(saved.commitDate).trim().substring(0,10);
+    if(!cd)return;
+
+    var diff=daysFromToday(cd);
+    if(diff===0)        buckets.today.cases.push({r:r,saved:saved,cd:cd});
+    else if(diff===1)   buckets.tmrw.cases.push({r:r,saved:saved,cd:cd});
+    else if(diff===2)   buckets.day2.cases.push({r:r,saved:saved,cd:cd});
+    else if(diff<0)     buckets.expired.cases.push({r:r,saved:saved,cd:cd});
   });
+
   grid.innerHTML='';
-  days.forEach(function(day,idx){
+  var bucketOrder=['today','tmrw','day2','expired'];
+
+  bucketOrder.forEach(function(key){
+    var bkt=buckets[key];
+    var isExpired=(key==='expired');
+
+    /* BM breakdown */
     var bmBreak={};
-    day.cases.forEach(function(item){
+    bkt.cases.forEach(function(item){
       var lbl=(item.r._bm||'').indexOf('@')>-1?item.r._bm.split('@')[0]:item.r._bm||'Unknown';
       bmBreak[lbl]=(bmBreak[lbl]||0)+1;
     });
-    var bmHtml='';Object.keys(bmBreak).sort().forEach(function(b){bmHtml+='<div class="reminder-bm-item"><span>'+esc(b)+'</span><strong>'+bmBreak[b]+' cases</strong></div>';});
+    var bmHtml='';
+    Object.keys(bmBreak).sort().forEach(function(b){
+      bmHtml+='<div class="reminder-bm-item"><span>'+esc(b)+'</span><strong>'+bmBreak[b]+'</strong></div>';
+    });
+
+    /* Total disbursed amount */
+    var totalAmt=bkt.cases.reduce(function(t,item){return t+(item.r._amt||0);},0);
+
     var card=document.createElement('div');
-    card.className='reminder-day-card'+(idx===0?' today-card':'')+(day.cases.length>0?' has-items':'');
-    card.innerHTML='<div class="reminder-day-title">'+day.label+'</div>'+
-      '<div class="reminder-day-date">'+day.dateLabel+'</div>'+
-      '<div class="reminder-day-count">'+day.cases.length+'</div>'+
-      '<div class="reminder-day-sub">commitment'+(day.cases.length!==1?'s':'')+' due</div>'+
-      (bmHtml?'<div class="reminder-bm-breakdown">'+bmHtml+'</div>':'');
-    if(day.cases.length>0){(function(dc){card.onclick=function(){
-      document.querySelectorAll('.reminder-day-card').forEach(function(c){c.classList.remove('selected');});
-      card.classList.add('selected');showReminderDetail(dc);
-    };})(day);}
+    card.className='reminder-day-card'+(bkt.cases.length>0?' has-items':'');
+    card.style.borderTop='4px solid '+bkt.col;
+    card.innerHTML=
+      '<div class="reminder-day-title" style="color:'+bkt.col+'">'+
+        (isExpired?'&#9888; ':'')+bkt.label+
+      '</div>'+
+      '<div class="reminder-day-date">'+bkt.dateLabel+'</div>'+
+      '<div style="display:flex;align-items:baseline;gap:8px;margin:10px 0 2px">'+
+        '<div class="reminder-day-count" style="color:'+bkt.col+'">'+bkt.cases.length+'</div>'+
+        '<div class="reminder-day-sub">case'+(bkt.cases.length!==1?'s':'')+'</div>'+
+      '</div>'+
+      (totalAmt>0?'<div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:8px">'+fmtAmt(totalAmt)+'</div>':'')+
+      (bmHtml&&bkt.cases.length>0?'<div class="reminder-bm-breakdown">'+bmHtml+'</div>':
+        bkt.cases.length===0?'<div style="font-size:11px;color:var(--text3);margin-top:8px">No commitments</div>':'');
+
+    if(bkt.cases.length>0){
+      (function(b){
+        card.style.cursor='pointer';
+        card.onclick=function(){
+          document.querySelectorAll('.reminder-day-card').forEach(function(c){c.classList.remove('selected');});
+          card.classList.add('selected');
+          showReminderDetail({label:b.label,cases:b.cases});
+        };
+      })(bkt);
+    }
     grid.appendChild(card);
   });
-  if(overdueList.length>0){
-    var oc=document.createElement('div');
-    oc.style.gridColumn='1 / -1';oc.className='reminder-day-card';oc.style.borderLeft='4px solid #991b1b';
-    oc.innerHTML='<div class="reminder-day-title" style="color:#991b1b">&#9888; Overdue Commitments</div>'+
-      '<div class="reminder-day-count" style="color:#991b1b">'+overdueList.length+'</div>'+
-      '<div class="reminder-day-sub">Past commitment dates — follow up immediately</div>';
-    oc.onclick=function(){
-      document.querySelectorAll('.reminder-day-card').forEach(function(c){c.classList.remove('selected');});
-      oc.classList.add('selected');
-      showReminderDetail({label:'Overdue Commitments',cases:overdueList});
-    };
-    grid.appendChild(oc);
-  }
-  if(days.every(function(d){return d.cases.length===0;})&&overdueList.length===0){
-    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3)">&#9989; No pending commitments for today or the next 2 days.</div>';
-  }
 }
+
+function fmtDayLabel(ds){
+  if(!ds)return '';
+  var d=new Date(ds+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+}
+
 
 function showReminderDetail(day){
   var card=el('reminder-detail-card');var title=el('reminder-detail-title');var tbody=el('reminder-detail-body');
