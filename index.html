@@ -607,7 +607,15 @@ function switchTab(tab){
   el('section-bank').style.display=tab==='bank'?'block':'none';
   el('section-reminders').style.display=tab==='reminders'?'block':'none';
   if(tab==='bank'){renderBankCharts(filteredData.length?filteredData:getMyData());renderBankTable();}
-  if(tab==='reminders'){buildReminderFilters();renderReminders();}
+  if(tab==='reminders'){
+    buildReminderFilters();
+    /* If cache not yet loaded, fetch first then render */
+    if(!_remarksFetched){
+      fetchRemarksAndRender(function(){renderReminders();});
+    } else {
+      renderReminders();
+    }
+  }
 }
 
 /* ===== DATA SCOPE ===== */
@@ -1135,8 +1143,10 @@ function fetchAndCacheRemarks(){
         });
       }
       _remarksFetched=true;
+      /* Re-render whatever tab is currently active */
       if(currentTab==='cases')renderTable();
-      if(currentTab==='reminders')renderReminders();
+      if(currentTab==='reminders'){buildReminderFilters();renderReminders();}
+      if(currentTab==='bank'){renderBankCharts(filteredData.length?filteredData:getMyData());renderBankTable();}
     }catch(e){console.warn('Remarks parse error:',e);}
   };
   xhr.onerror=function(){
@@ -1147,6 +1157,42 @@ function fetchAndCacheRemarks(){
       xhr2.onload=xhr.onload;
       xhr2.send();
     },4000);
+  };
+  xhr.send();
+}
+
+/* ── FETCH WITH CALLBACK (used when tab opens before data loaded) ── */
+function fetchRemarksAndRender(callback){
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',GAS_URL+'?action=get_remarks',true);
+  xhr.onload=function(){
+    try{
+      var data=JSON.parse(xhr.responseText);
+      _remarksCache={};
+      if(data.remarks){
+        data.remarks.forEach(function(row){
+          var rowLid=String(row['Loan ID']||'').trim();
+          if(rowLid){
+            _remarksCache[rowLid]={
+              remark:    row['Remark']||'',
+              commitDate:row['Commit Date']||'',
+              status:    row['Status']||'Open',
+              bmUser:    row['BM User']||'',
+              bmDisplay: row['BM Display Name']||''
+            };
+          }
+        });
+      }
+      _remarksFetched=true;
+      if(typeof callback==='function')callback();
+    }catch(e){
+      /* Even on parse error, try to render with whatever cache exists */
+      if(typeof callback==='function')callback();
+    }
+  };
+  xhr.onerror=function(){
+    /* Render with existing cache on error */
+    if(typeof callback==='function')callback();
   };
   xhr.send();
 }
@@ -1173,8 +1219,11 @@ function pushRemarkToSheet(loanId,data,btnEl){
     try{
       var resp=JSON.parse(xhr.responseText);
       if(btnEl){
-        if(resp.status==='ok'){btnEl.textContent='Saved \u2713';btnEl.className='bm-save-btn saved';}
-        else{btnEl.textContent='Error! Check Sheet';btnEl.className='bm-save-btn';}
+        if(resp.status==='ok'){
+          btnEl.textContent='Saved ✓';btnEl.className='bm-save-btn saved';
+          /* Refresh reminders tab if open */
+          if(currentTab==='reminders')renderReminders();
+        } else {btnEl.textContent='Error! Check Sheet';btnEl.className='bm-save-btn';}
         setTimeout(function(){if(btnEl){btnEl.textContent='Save & Sync';btnEl.className='bm-save-btn';}},2500);
       }
     }catch(e){
@@ -1273,6 +1322,8 @@ function saveBMRemark(btnEl){
     pddAgeing:pddAge,pendency:pendency
   };
   pushRemarkToSheet(loanId,payload,btnEl);
+  /* Refresh cases table to show updated inline remark immediately */
+  if(currentTab==='cases')renderTable();
 }
 
 /* ── EXPORT REMARKS CSV ── */
