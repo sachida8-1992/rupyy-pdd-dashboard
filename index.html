@@ -204,6 +204,59 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 .upload-status{margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;display:none}
 .upload-status.success{background:var(--green-s);color:var(--green);border:1px solid rgba(26,122,60,.2)}
 .upload-status.error{background:var(--red-s);color:var(--red);border:1px solid rgba(192,57,43,.2)}
+.span-table-wrap{overflow-x:auto;margin-top:4px}
+.span-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.span-tbl th{padding:9px 12px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;border-bottom:2px solid var(--border);background:var(--surface2);text-align:left;white-space:nowrap;color:var(--text2)}
+.span-tbl th.center{text-align:center}
+.span-tbl td{padding:9px 12px;border-bottom:1px solid #edf2f7;vertical-align:middle;font-size:12px;color:var(--text2)}
+.span-tbl tbody tr:hover td{background:#f0f7ff;cursor:pointer}
+.span-tbl tbody tr.selected-row td{background:var(--accent-glow);font-weight:600}
+.span-tbl tfoot td{padding:9px 12px;font-weight:700;background:#edf2f7;border-top:2px solid var(--border);color:var(--text)}
+.span-tbl td.center{text-align:center}
+.span-tbl td.name-cell{font-weight:600;color:var(--text)}
+.age-pill{display:inline-block;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;font-family:var(--mono);text-align:center;min-width:28px}
+.ap120{background:#fee2e2;color:#991b1b}.ap90{background:#ffedd5;color:#9a3412}
+.ap60{background:#fef3c7;color:#92400e}.ap45{background:#fefce8;color:#713f12}
+.ap30{background:#dcfce7;color:#14532d}.ap15{background:#e0f2fe;color:#075985}
+.rem-done{color:var(--green);font-weight:700;font-family:var(--mono)}
+.rem-pend{color:var(--red);font-weight:700;font-family:var(--mono)}
+.rem-pct{font-size:10px;color:var(--text3);display:block}
+.bm-detail-panel{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-top:14px;box-shadow:var(--shadow-sm)}
+.bm-detail-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px}
+.bm-age-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bm-detail-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.bm-detail-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);background:var(--surface2);text-align:left}
+.bm-detail-tbl td{padding:7px 10px;border-bottom:1px solid #edf2f7;font-size:11px;color:var(--text2)}
+.bm-detail-tbl tbody tr:hover td{background:#f0f7ff}
+.pend-age-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
+.pend-age-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:#fff;text-align:center;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+.pend-age-tbl th:first-child{text-align:left;background:#1a2744}
+.pend-age-tbl .age-120{background:#c0392b}.pend-age-tbl .age-90{background:#c05621}
+.pend-age-tbl .age-60{background:#d97706}.pend-age-tbl .age-45{background:#926800}
+.pend-age-tbl .age-30{background:#1a7a3c}.pend-age-tbl .age-tot{background:#1a5cb4}
+.pend-age-tbl td{padding:6px 10px;border-bottom:1px solid #edf2f7;vertical-align:middle}
+.pend-age-tbl tbody tr:hover td{background:#f0f7ff}
+.pend-age-tbl tfoot td{padding:7px 10px;font-weight:700;background:#edf2f7;border-top:2px solid var(--border)}
+.pend-age-tbl td:first-child{font-weight:600;color:var(--text)}
+.pend-age-tbl td:not(:first-child){text-align:center}
+.pend-age-cell{display:flex;flex-direction:column;align-items:center;gap:1px}
+.pend-age-count{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)}
+.pend-age-amt{font-family:var(--mono);font-size:10px;color:var(--text2)}
+/* BM stats table in reminders */
+.bm-stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:18px}
+.bm-stats-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm)}
+.bm-stats-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bm-stats-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #edf2f7;font-size:11px}
+.bm-stats-row:last-child{border-bottom:none}
+.bm-stats-lbl{color:var(--text2)}
+.bm-stats-val{font-family:var(--mono);font-weight:700;color:var(--text)}
+.bm-stats-val.v120{color:#c0392b}.bm-stats-val.v90{color:#c05621}.bm-stats-val.v60{color:#d97706}
+.bm-stats-val.v45{color:#926800}.bm-stats-val.v30{color:#1a7a3c}.bm-stats-val.v15{color:#0891b2}
+.bm-stats-val.vok{color:#1a7a3c}.bm-stats-val.vwarn{color:#c0392b}
+.rem-summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.rem-sum-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;box-shadow:var(--shadow-sm)}
+.rem-sum-val{font-family:var(--mono);font-size:28px;font-weight:700;margin-bottom:4px}
+.rem-sum-lbl{font-size:11px;color:var(--text2)}
 .bm-remark-input{width:100%;padding:4px 7px;border:1px solid var(--border2);border-radius:4px;font-family:var(--sans);font-size:11px;color:var(--text);background:#fff;outline:none;resize:vertical;min-height:36px;transition:border-color .2s}
 .bm-remark-input:focus{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(26,92,180,.08)}
 .bm-remark-input:disabled{background:var(--surface2);color:var(--text2);cursor:default}
@@ -343,9 +396,23 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     <!-- ===== CASES TAB ===== -->
     <div id="section-cases">
       <div class="charts-row">
-        <div class="chart-card">
-          <div class="chart-title">Pendency Type Breakdown</div>
-          <div class="chart-wrap"><canvas id="donut-chart"></canvas></div>
+        <div class="chart-card" style="overflow-x:auto">
+          <div class="chart-title">Pendency &amp; Ageing Summary — Cases &amp; Disbursed Amount</div>
+          <table class="pend-age-tbl" id="pend-age-tbl">
+            <thead>
+              <tr>
+                <th>Pendency Type</th>
+                <th class="age-120">120D+</th>
+                <th class="age-90">90D+</th>
+                <th class="age-60">60D+</th>
+                <th class="age-45">45D+</th>
+                <th class="age-30">30D+</th>
+                <th class="age-tot">Total</th>
+              </tr>
+            </thead>
+            <tbody id="pend-age-body"></tbody>
+            <tfoot id="pend-age-foot"></tfoot>
+          </table>
         </div>
         <div class="top-channels-card">
           <div class="chart-title">Top 5 Channels &mdash; Highest Pending by Ageing</div>
@@ -443,6 +510,21 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     <!-- ===== REMINDERS TAB ===== -->
     <div id="section-reminders" style="display:none">
       <div class="section-label">&#128276; Commitment Reminders &mdash; Today &amp; Next 2 Days</div>
+      <!-- Summary bar: total cases, remarks entered, pending remarks -->
+      <div class="rem-summary-bar" id="rem-summary-bar"></div>
+      <!-- BM-wise ageing + remarks stats cards -->
+      <div id="bm-stats-section" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          <div class="section-label" style="margin-bottom:0;flex:1">BM-wise Case &amp; Remarks Summary</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <select class="filter-select" id="bm-stats-filter" onchange="filterBMStatsCards()" style="min-width:180px">
+              <option value="">All BMs</option>
+            </select>
+            <button class="reset-btn" onclick="el('bm-stats-filter').value='';filterBMStatsCards()">Show All</button>
+          </div>
+        </div>
+        <div class="bm-stats-grid" id="bm-stats-grid"></div>
+      </div>
       <!-- AM/RH: Filter bar -->
       <div id="reminder-filter-bar" style="display:none">
         <div class="filters-row" style="margin-bottom:14px">
@@ -659,67 +741,205 @@ function buildAdminRHSpan(container){
   var bc=el('breadcrumb');
   if(bc){
     if(!drillAM){
-      bc.innerHTML='<span class="breadcrumb-current">'+(currentRole==='rh'?'AM Span View':'All AMs')+'</span>';
-    } else if(!drillBM){
-      var a1=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
-      bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(a1)+' (BM Span)</span>';
+      bc.innerHTML='<span class="breadcrumb-current">'+(currentRole==='rh'?'AM Span View':'All Area Managers')+'</span>';
     } else {
-      var a2=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
-      var b2=drillBM.indexOf('@')>-1?drillBM.split('@')[0]:drillBM;
-      bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-item" onclick="drillUpAM()">'+esc(a2)+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(b2)+'</span>';
+      var a1=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
+      bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(a1)+' — BM Summary</span>';
     }
   }
+  var lbl=el('span-label');
   if(!drillAM){
-    var lbl=el('span-label');if(lbl)lbl.textContent=currentRole==='rh'?'Area Manager Span':'All Area Managers';
+    /* ── RH/Admin: AM summary table ── */
+    if(lbl)lbl.textContent=(currentRole==='rh'?'Area Manager Span':'All Area Managers')+' — Summary';
     var amMap={};
-    scopeData.forEach(function(r){var am=r._am||'(Unassigned)';if(!amMap[am])amMap[am]={total:0,p120:0,p90:0,p60:0};amMap[am].total++;if(r['PDD Ageing (Days)']==AGEING_KEYS[0])amMap[am].p120++;if(r['PDD Ageing (Days)']==AGEING_KEYS[1])amMap[am].p90++;if(r['PDD Ageing (Days)']==AGEING_KEYS[2])amMap[am].p60++;});
-    var grid=document.createElement('div');grid.className='span-grid';
-    var allCard=mkCard('All AMs',scopeData.length,countAge(scopeData,AGEING_KEYS[0]),countAge(scopeData,AGEING_KEYS[1]),countAge(scopeData,AGEING_KEYS[2]),!drillAM);
-    allCard.onclick=function(){drillAM=null;drillBM=null;buildSpanView();applyFilters();};grid.appendChild(allCard);
-    Object.keys(amMap).sort(function(a,b){return amMap[b].total-amMap[a].total;}).forEach(function(am){
-      var s=amMap[am];var lbl2=am.indexOf('@')>-1?am.split('@')[0]:am;
-      var card=mkCard(lbl2,s.total,s.p120,s.p90,s.p60,drillAM===am);
-      (function(a2){card.onclick=function(){drillAM=a2;drillBM=null;buildSpanView();applyFilters();};})(am);
-      grid.appendChild(card);
+    scopeData.forEach(function(r){
+      var am=r._am||'(Unassigned)';
+      if(!amMap[am])amMap[am]={am:am,lbl:'',total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+      amMap[am].lbl=am.indexOf('@')>-1?am.split('@')[0]:am;
+      amMap[am].total++;
+      var ag=r['PDD Ageing (Days)'];
+      if(ag===AGEING_KEYS[0])amMap[am].p120++;else if(ag===AGEING_KEYS[1])amMap[am].p90++;
+      else if(ag===AGEING_KEYS[2])amMap[am].p60++;else if(ag===AGEING_KEYS[3])amMap[am].p45++;
+      else if(ag===AGEING_KEYS[4])amMap[am].p30++;else if(ag==='15 Days Above')amMap[am].p15++;
+      var lid=String(r['Loan ID']||'').trim();
+      var saved=_remarksCache[lid];
+      if(saved&&saved.remark)amMap[am].remDone++;else amMap[am].remPend++;
     });
-    container.appendChild(grid);
+    var ams=Object.keys(amMap).sort(function(a,b){return amMap[b].total-amMap[a].total;});
+    /* Build table */
+    var wrap=document.createElement('div');wrap.className='table-card';
+    var totR={total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+    var rows='';
+    ams.forEach(function(am){
+      var s=amMap[am];
+      Object.keys(totR).forEach(function(k){totR[k]+=s[k];});
+      var pct=s.total>0?Math.round(s.remDone/s.total*100):0;
+      rows+='<tr data-am="'+esc(am)+'" onclick="selectAMRow(this,\''+am.replace(/'/g,"\\'")+'\')">'+
+        '<td class="name-cell">'+esc(s.lbl)+'</td>'+
+        '<td class="center">'+s.total+'</td>'+
+        '<td class="center"><span class="age-pill ap120">'+s.p120+'</span></td>'+
+        '<td class="center"><span class="age-pill ap90">'+s.p90+'</span></td>'+
+        '<td class="center"><span class="age-pill ap60">'+s.p60+'</span></td>'+
+        '<td class="center"><span class="age-pill ap45">'+s.p45+'</span></td>'+
+        '<td class="center"><span class="age-pill ap30">'+s.p30+'</span></td>'+
+        '<td class="center"><span class="age-pill ap15">'+s.p15+'</span></td>'+
+        '<td class="center"><span class="rem-done">'+s.remDone+'</span><span class="rem-pct">'+pct+'%</span></td>'+
+        '<td class="center"><span class="rem-pend">'+s.remPend+'</span></td>'+
+        '<td class="center" style="font-size:10px;color:var(--accent)">View BMs &rsaquo;</td>'+
+        '</tr>';
+    });
+    var pctTot=totR.total>0?Math.round(totR.remDone/totR.total*100):0;
+    wrap.innerHTML=
+      '<div class="table-header-row"><div class="table-count">Click any AM row to view their BM breakdown</div></div>'+
+      '<div class="span-table-wrap"><table class="span-tbl">'+
+      '<thead><tr>'+
+        '<th>AM Name</th><th class="center">Total</th>'+
+        '<th class="center">120D+</th><th class="center">90D+</th><th class="center">60D+</th>'+
+        '<th class="center">45D+</th><th class="center">30D+</th><th class="center">15D+</th>'+
+        '<th class="center">Remarks Done</th><th class="center">Rem Pending</th><th class="center"></th>'+
+      '</tr></thead>'+
+      '<tbody>'+rows+'</tbody>'+
+      '<tfoot><tr>'+
+        '<td><strong>Total</strong></td>'+
+        '<td class="center"><strong>'+totR.total+'</strong></td>'+
+        '<td class="center"><span class="age-pill ap120">'+totR.p120+'</span></td>'+
+        '<td class="center"><span class="age-pill ap90">'+totR.p90+'</span></td>'+
+        '<td class="center"><span class="age-pill ap60">'+totR.p60+'</span></td>'+
+        '<td class="center"><span class="age-pill ap45">'+totR.p45+'</span></td>'+
+        '<td class="center"><span class="age-pill ap30">'+totR.p30+'</span></td>'+
+        '<td class="center"><span class="age-pill ap15">'+totR.p15+'</span></td>'+
+        '<td class="center"><span class="rem-done">'+totR.remDone+'</span><span class="rem-pct">'+pctTot+'%</span></td>'+
+        '<td class="center"><span class="rem-pend">'+totR.remPend+'</span></td>'+
+        '<td></td>'+
+      '</tr></tfoot>'+
+      '</table></div>'+
+      '<div id="am-bm-detail-panel"></div>';
+    container.appendChild(wrap);
   } else {
-    var lbl3=el('span-label');
-    var amLbl=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
-    if(lbl3)lbl3.textContent='Branch Managers under '+amLbl;
+    /* ── Drilled into AM → show BM table ── */
+    var amLbl2=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
+    if(lbl)lbl.textContent='BMs under '+amLbl2;
     var amData=scopeData.filter(function(r){return r._amLower===drillAM.toLowerCase();});
-    var bmMap={};
-    amData.forEach(function(r){var bm=r._bm||'(Unassigned)';if(!bmMap[bm])bmMap[bm]={total:0,p120:0,p90:0,p60:0};bmMap[bm].total++;if(r['PDD Ageing (Days)']==AGEING_KEYS[0])bmMap[bm].p120++;if(r['PDD Ageing (Days)']==AGEING_KEYS[1])bmMap[bm].p90++;if(r['PDD Ageing (Days)']==AGEING_KEYS[2])bmMap[bm].p60++;});
-    var grid=document.createElement('div');grid.className='span-grid';
-    var allCard=mkCard('All BMs ('+amLbl+')',amData.length,countAge(amData,AGEING_KEYS[0]),countAge(amData,AGEING_KEYS[1]),countAge(amData,AGEING_KEYS[2]),!drillBM);
-    allCard.onclick=function(){drillBM=null;buildSpanView();applyFilters();};grid.appendChild(allCard);
-    Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;}).forEach(function(bm){
-      var s=bmMap[bm];var lbl4=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
-      var card=mkCard(lbl4,s.total,s.p120,s.p90,s.p60,drillBM===bm);
-      (function(b2){card.onclick=function(){drillBM=b2;buildSpanView();applyFilters();};})(bm);
-      grid.appendChild(card);
-    });
-    container.appendChild(grid);
+    container.appendChild(buildBMTable(amData,'Click any BM row to see case details',function(bmName){
+      drillBM=bmName;buildSpanView();applyFilters();
+    }));
   }
 }
+
+function selectAMRow(tr,amName){
+  /* Highlight row */
+  tr.closest('tbody').querySelectorAll('tr').forEach(function(r){r.classList.remove('selected-row');});
+  tr.classList.add('selected-row');
+  /* Set drillAM and rebuild but stay on same page (don't call applyFilters) */
+  drillAM=amName;drillBM=null;
+  var bc=el('breadcrumb');
+  if(bc){var a1=amName.indexOf('@')>-1?amName.split('@')[0]:amName;bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(a1)+' — BM Summary</span>';}
+  var lbl=el('span-label');if(lbl){var a1b=amName.indexOf('@')>-1?amName.split('@')[0]:amName;lbl.textContent='BMs under '+a1b;}
+  var panel=el('am-bm-detail-panel');if(!panel)return;
+  panel.innerHTML='';
+  var amData=(currentRole==='rh')?DATA.filter(function(r){return r._rhLower===currentUser.toLowerCase()&&r._amLower===amName.toLowerCase();}):DATA.filter(function(r){return r._amLower===amName.toLowerCase();});
+  panel.appendChild(buildBMTable(amData,'BM summary for '+( amName.indexOf('@')>-1?amName.split('@')[0]:amName),function(bmName){
+    drillBM=bmName;buildSpanView();applyFilters();
+  }));
+}
+
+function buildBMTable(data,hint,onClickBM){
+  var bmMap={};
+  data.forEach(function(r){
+    var bm=r._bm||'(Unassigned)';
+    if(!bmMap[bm])bmMap[bm]={bm:bm,lbl:'',total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+    bmMap[bm].lbl=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
+    bmMap[bm].total++;
+    var ag=r['PDD Ageing (Days)'];
+    if(ag===AGEING_KEYS[0])bmMap[bm].p120++;else if(ag===AGEING_KEYS[1])bmMap[bm].p90++;
+    else if(ag===AGEING_KEYS[2])bmMap[bm].p60++;else if(ag===AGEING_KEYS[3])bmMap[bm].p45++;
+    else if(ag===AGEING_KEYS[4])bmMap[bm].p30++;else if(ag==='15 Days Above')bmMap[bm].p15++;
+    var lid=String(r['Loan ID']||'').trim();
+    var saved=_remarksCache[lid];
+    if(saved&&saved.remark)bmMap[bm].remDone++;else bmMap[bm].remPend++;
+  });
+  var bms=Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;});
+  var totR={total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+  var rows='';
+  bms.forEach(function(bm){
+    var s=bmMap[bm];
+    Object.keys(totR).forEach(function(k){totR[k]+=s[k];});
+    var pct=s.total>0?Math.round(s.remDone/s.total*100):0;
+    rows+='<tr onclick="('+onClickBM.toString()+')(\''+bm.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+
+      '<td class="name-cell">'+esc(s.lbl)+'</td>'+
+      '<td class="center">'+s.total+'</td>'+
+      '<td class="center"><span class="age-pill ap120">'+s.p120+'</span></td>'+
+      '<td class="center"><span class="age-pill ap90">'+s.p90+'</span></td>'+
+      '<td class="center"><span class="age-pill ap60">'+s.p60+'</span></td>'+
+      '<td class="center"><span class="age-pill ap45">'+s.p45+'</span></td>'+
+      '<td class="center"><span class="age-pill ap30">'+s.p30+'</span></td>'+
+      '<td class="center"><span class="age-pill ap15">'+s.p15+'</span></td>'+
+      '<td class="center"><span class="rem-done">'+s.remDone+'</span><span class="rem-pct">'+pct+'%</span></td>'+
+      '<td class="center"><span class="rem-pend">'+s.remPend+'</span></td>'+
+      '<td class="center" style="font-size:10px;color:var(--accent)">View Cases &rsaquo;</td>'+
+      '</tr>';
+  });
+  var pctTot=totR.total>0?Math.round(totR.remDone/totR.total*100):0;
+  var wrap=document.createElement('div');wrap.className='table-card';wrap.style.marginTop='14px';
+  wrap.innerHTML=
+    '<div class="table-header-row"><div class="table-count">'+esc(hint)+' — click any BM to filter cases below</div></div>'+
+    '<div class="span-table-wrap"><table class="span-tbl">'+
+    '<thead><tr>'+
+      '<th>BM Name</th><th class="center">Total</th>'+
+      '<th class="center">120D+</th><th class="center">90D+</th><th class="center">60D+</th>'+
+      '<th class="center">45D+</th><th class="center">30D+</th><th class="center">15D+</th>'+
+      '<th class="center">Remarks Done</th><th class="center">Rem Pending</th><th class="center"></th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '<tfoot><tr>'+
+      '<td><strong>Total</strong></td>'+
+      '<td class="center"><strong>'+totR.total+'</strong></td>'+
+      '<td class="center"><span class="age-pill ap120">'+totR.p120+'</span></td>'+
+      '<td class="center"><span class="age-pill ap90">'+totR.p90+'</span></td>'+
+      '<td class="center"><span class="age-pill ap60">'+totR.p60+'</span></td>'+
+      '<td class="center"><span class="age-pill ap45">'+totR.p45+'</span></td>'+
+      '<td class="center"><span class="age-pill ap30">'+totR.p30+'</span></td>'+
+      '<td class="center"><span class="age-pill ap15">'+totR.p15+'</span></td>'+
+      '<td class="center"><span class="rem-done">'+totR.remDone+'</span><span class="rem-pct">'+pctTot+'%</span></td>'+
+      '<td class="center"><span class="rem-pend">'+totR.remPend+'</span></td>'+
+      '<td></td>'+
+    '</tr></tfoot>'+
+    '</table></div>';
+  return wrap;
+}
+
+
 function buildAMSpan(container){
   var amData=DATA.filter(function(r){return r._amLower===currentUser.toLowerCase();});
   var bc=el('breadcrumb');
-  if(bc){if(!amDrillBM){bc.innerHTML='<span class="breadcrumb-current">Branch Manager Span</span>';}else{var bmLbl=amDrillBM.indexOf('@')>-1?amDrillBM.split('@')[0]:amDrillBM;bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">BM Span</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(bmLbl)+'</span>';}}
-  var lbl=el('span-label');if(lbl)lbl.textContent='Branch Managers Under Your Span';
-  var bmMap={};
-  amData.forEach(function(r){var bm=r._bm||'(Unassigned)';if(!bmMap[bm])bmMap[bm]={total:0,p120:0,p90:0,p60:0};bmMap[bm].total++;if(r['PDD Ageing (Days)']==AGEING_KEYS[0])bmMap[bm].p120++;if(r['PDD Ageing (Days)']==AGEING_KEYS[1])bmMap[bm].p90++;if(r['PDD Ageing (Days)']==AGEING_KEYS[2])bmMap[bm].p60++;});
-  var grid=document.createElement('div');grid.className='span-grid';
-  var allCard=mkCard('All BMs',amData.length,countAge(amData,AGEING_KEYS[0]),countAge(amData,AGEING_KEYS[1]),countAge(amData,AGEING_KEYS[2]),!amDrillBM);
-  allCard.onclick=function(){amDrillBM=null;buildSpanView();applyFilters();};grid.appendChild(allCard);
-  Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;}).forEach(function(bm){
-    var s=bmMap[bm];var lbl2=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
-    var card=mkCard(lbl2,s.total,s.p120,s.p90,s.p60,amDrillBM===bm);
-    (function(b2){card.onclick=function(){amDrillBM=b2;buildSpanView();applyFilters();};})(bm);
-    grid.appendChild(card);
+  if(bc){
+    if(!amDrillBM){
+      bc.innerHTML='<span class="breadcrumb-current">BM Summary</span>';
+    } else {
+      var bmLbl=amDrillBM.indexOf('@')>-1?amDrillBM.split('@')[0]:amDrillBM;
+      bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">BM Summary</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(bmLbl)+'</span>';
+    }
+  }
+  var lbl=el('span-label');if(lbl)lbl.textContent='Branch Manager Summary';
+
+  var tblWrap=buildBMTable(amData,'Click any BM to filter their cases below',function(bmName){
+    amDrillBM=bmName;
+    buildSpanView();applyFilters();
   });
-  container.appendChild(grid);
+
+  /* If a BM is drilled into, highlight that row after render */
+  container.appendChild(tblWrap);
+  if(amDrillBM){
+    var rows=tblWrap.querySelectorAll('tbody tr');
+    rows.forEach(function(r){
+      if(r.querySelector('.name-cell')&&r.querySelector('.name-cell').title===amDrillBM){
+        r.classList.add('selected-row');
+      }
+    });
+  }
 }
+
+
 function drillUpTop(){if(currentRole==='am'){amDrillBM=null;}else{drillAM=null;drillBM=null;}buildSpanView();applyFilters();}
 function drillUpAM(){drillBM=null;buildSpanView();applyFilters();}
 
@@ -860,16 +1080,9 @@ function renderAgeingBar(data){
 
 /* ===== CASES TAB CHARTS: Pendency donut + Top 5 Channels ===== */
 function renderCasesCharts(data){
-  /* Pendency donut */
-  var dCtx=el('donut-chart');
-  if(dCtx){
-    var pCount={};data.forEach(function(r){var p=r._pendency||'Blank';pCount[p]=(pCount[p]||0)+1;});
-    var pE=Object.keys(pCount).map(function(k){return[k,pCount[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
-    if(donutChart)donutChart.destroy();
-    var dc=['#1a5cb4','#5b21b6','#c0392b','#c05621','#1a7a3c','#0891b2','#be185d','#065f46','#92400e','#4338ca'];
-    donutChart=new Chart(dCtx.getContext('2d'),{type:'doughnut',data:{labels:pE.map(function(e){return e[0];}),datasets:[{data:pE.map(function(e){return e[1];}),backgroundColor:dc,borderColor:'#fff',borderWidth:2,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#4a6080',font:{size:10},boxWidth:10,padding:6}}}}});
-  }
-  /* Top 5 Channels */
+  /* ── Pendency × Ageing summary table ── */
+  renderPendAgeTable(data);
+  /* ── Top 5 Channels ── */
   var chMap={};
   data.forEach(function(r){var k=(r['DC ID']||'')+'||'+(r['Dealer Name']||'?');if(!chMap[k])chMap[k]={name:r['Dealer Name']||'Unknown',dcid:r['DC ID']||'',p120:0,p90:0,p60:0,total:0};chMap[k].total++;if(r['PDD Ageing (Days)']==AGEING_KEYS[0])chMap[k].p120++;if(r['PDD Ageing (Days)']==AGEING_KEYS[1])chMap[k].p90++;if(r['PDD Ageing (Days)']==AGEING_KEYS[2])chMap[k].p60++;});
   var chs=Object.values(chMap).sort(function(a,b){return(b.p120+b.p90+b.p60)-(a.p120+a.p90+a.p60);}).slice(0,5);
@@ -878,6 +1091,58 @@ function renderCasesCharts(data){
   chs.forEach(function(ch,i){var tr=document.createElement('tr');var nm=ch.name.length>22?ch.name.substring(0,22)+'..':ch.name;tr.innerHTML='<td><span class="rank-badge '+rk[i]+'">'+(i+1)+'</span><span class="channel-name" title="'+esc(ch.name)+'">'+esc(nm)+'</span></td><td style="font-size:11px;color:var(--text3);font-family:var(--mono)">'+esc(ch.dcid)+'</td><td><span class="count-pill cp120">'+ch.p120+'</span></td><td><span class="count-pill cp90">'+ch.p90+'</span></td><td><span class="count-pill cp60">'+ch.p60+'</span></td><td style="font-family:var(--mono);font-size:12px;font-weight:700">'+ch.total+'</td>';tbody.appendChild(tr);});
   if(!chs.length)tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text3)">No data</td></tr>';
 }
+
+function renderPendAgeTable(data){
+  var tbody=el('pend-age-body');var tfoot=el('pend-age-foot');
+  if(!tbody)return;
+  /* Build map: pendency -> { per ageing: {count, amt} } */
+  var pMap={};
+  var AGES=['120 Days Above','90 Days Above','60 Days Above','45 Days Above','30 Days Above'];
+  data.forEach(function(r){
+    var p=r._pendency||'Unknown';var ag=r['PDD Ageing (Days)'];var amt=r._amt||0;
+    if(!pMap[p])pMap[p]={};
+    if(!pMap[p][ag])pMap[p][ag]={cnt:0,amt:0};
+    pMap[p][ag].cnt++;pMap[p][ag].amt+=amt;
+  });
+  /* Sort pendencies: No pending last, rest by total count desc */
+  var pKeys=Object.keys(pMap).sort(function(a,b){
+    if(a==='No pending')return 1;if(b==='No pending')return -1;
+    var ta=AGES.reduce(function(s,ag){return s+(pMap[a][ag]?pMap[a][ag].cnt:0);},0);
+    var tb=AGES.reduce(function(s,ag){return s+(pMap[b][ag]?pMap[b][ag].cnt:0);},0);
+    return tb-ta;
+  });
+  var totals={};AGES.forEach(function(ag){totals[ag]={cnt:0,amt:0};});
+  var totTotal={cnt:0,amt:0};
+  function mkCell(obj){
+    if(!obj||!obj.cnt)return '<td>—</td>';
+    return '<td><div class="pend-age-cell"><span class="pend-age-count">'+obj.cnt+'</span><span class="pend-age-amt">'+fmtAmt(obj.amt)+'</span></div></td>';
+  }
+  var rows='';
+  pKeys.forEach(function(p){
+    var rowTotal={cnt:0,amt:0};
+    var cells='';
+    AGES.forEach(function(ag){
+      var obj=pMap[p][ag]||null;
+      cells+=mkCell(obj);
+      if(obj){rowTotal.cnt+=obj.cnt;rowTotal.amt+=obj.amt;totals[ag].cnt+=obj.cnt;totals[ag].amt+=obj.amt;totTotal.cnt+=obj.cnt;totTotal.amt+=obj.amt;}
+    });
+    var pCls=getPCls(p);
+    rows+='<tr>'+
+      '<td><span class="pendency-tag '+pCls+'" style="font-size:11px">'+esc(p)+'</span></td>'+
+      cells+
+      '<td><div class="pend-age-cell"><span class="pend-age-count" style="color:var(--accent)">'+rowTotal.cnt+'</span><span class="pend-age-amt">'+fmtAmt(rowTotal.amt)+'</span></div></td>'+
+      '</tr>';
+  });
+  tbody.innerHTML=rows;
+  /* Footer totals */
+  var footCells='';
+  AGES.forEach(function(ag){footCells+=mkCell(totals[ag]||null);});
+  tfoot.innerHTML='<tr>'+
+    '<td><strong>Total</strong></td>'+footCells+
+    '<td><div class="pend-age-cell"><span class="pend-age-count" style="color:var(--accent)">'+totTotal.cnt+'</span><span class="pend-age-amt">'+fmtAmt(totTotal.amt)+'</span></div></td>'+
+    '</tr>';
+}
+
 
 /* ===== BANK TAB CHARTS: Bank-wise Ageing pie + Top 5 RTO codes ===== */
 function renderBankCharts(data){
@@ -1156,8 +1421,8 @@ function fetchAndCacheRemarks(){
   xhr.onload=function(){
     try{
       var data=JSON.parse(xhr.responseText);
-      _remarksCache={};
-      if(data.remarks){
+      if(data.remarks&&data.remarks.length>0){
+        /* Only update cache with sheet data - merge, don't wipe local saves */
         data.remarks.forEach(function(row){
           var rowLid=String(row['Loan ID']||'').trim();
           if(rowLid){
@@ -1170,11 +1435,16 @@ function fetchAndCacheRemarks(){
             };
           }
         });
+        _remarksFetched=true;
+      } else if(data.remarks&&data.remarks.length===0){
+        /* Sheet is genuinely empty - mark fetched but keep local cache */
+        _remarksFetched=true;
       }
-      _remarksFetched=true;
       /* Re-render whatever tab is currently active */
       if(currentTab==='cases')renderTable();
-      if(currentTab==='reminders'){buildReminderFilters();renderReminders();}
+      if(currentTab==='reminders'){buildReminderFilters();renderReminderStats();renderReminders();}
+      /* Refresh span tables when remarks update */
+      if(currentRole==='rh'||currentRole==='am'||currentRole==='admin'){buildSpanView();}
       if(currentTab==='bank'){renderBankCharts(filteredData.length?filteredData:getMyData());renderBankTable();}
     }catch(e){console.warn('Remarks parse error:',e);}
   };
@@ -1197,8 +1467,7 @@ function fetchRemarksAndRender(callback){
   xhr.onload=function(){
     try{
       var data=JSON.parse(xhr.responseText);
-      _remarksCache={};
-      if(data.remarks){
+      if(data.remarks&&data.remarks.length>0){
         data.remarks.forEach(function(row){
           var rowLid=String(row['Loan ID']||'').trim();
           if(rowLid){
@@ -1245,20 +1514,39 @@ function pushRemarkToSheet(loanId,data,btnEl){
   var xhr=new XMLHttpRequest();
   xhr.open('GET',url,true);
   xhr.onload=function(){
+    /* Find the button - it may have been re-created by renderTable, look it up by data attr */
+    var activeBtn=btnEl;
+    if(btnEl&&btnEl.getAttribute('data-saving-lid')){
+      var lid2=btnEl.getAttribute('data-saving-lid');
+      var found=document.querySelector('[data-saving-lid="'+lid2+'"]');
+      if(found)activeBtn=found;
+    }
+    var isOk=false;
     try{
       var resp=JSON.parse(xhr.responseText);
-      if(btnEl){
-        if(resp.status==='ok'){
-          btnEl.textContent='Saved ✓';btnEl.className='bm-save-btn saved';
-          /* Refresh reminders tab if open */
-          if(currentTab==='reminders')renderReminders();
-        } else {btnEl.textContent='Error! Check Sheet';btnEl.className='bm-save-btn';}
-        setTimeout(function(){if(btnEl){btnEl.textContent='Save & Sync';btnEl.className='bm-save-btn';}},2500);
-      }
+      isOk=(resp.status==='ok');
     }catch(e){
-      /* Apps Script may return HTML on first call (cold start) - treat as success since data was sent */
-      if(btnEl){btnEl.textContent='Saved \u2713';btnEl.className='bm-save-btn saved';
-        setTimeout(function(){if(btnEl){btnEl.textContent='Save & Sync';btnEl.className='bm-save-btn';}},2500);}
+      /* Apps Script cold start returns HTML - data was still saved */
+      isOk=true;
+    }
+    if(activeBtn){
+      if(isOk){
+        activeBtn.textContent='Saved \u2713';activeBtn.className='bm-save-btn saved';
+        activeBtn.removeAttribute('data-saving-lid');
+        if(currentTab==='reminders')renderReminders();
+        /* Re-render table to show updated remark badge for AM/RH view */
+        if(currentTab==='cases')renderTable();
+        /* Re-fetch from sheet after 2s so AM/RH get fresh data on next load */
+        setTimeout(function(){fetchAndCacheRemarks();},2000);
+      } else {
+        activeBtn.textContent='Error! Retry';activeBtn.className='bm-save-btn';
+        activeBtn.removeAttribute('data-saving-lid');
+      }
+      setTimeout(function(){
+        var b=activeBtn;
+        if(b&&b.className!=='bm-save-btn'){}
+        if(b){b.textContent='Save & Sync';b.className='bm-save-btn';}
+      },2500);
     }
   };
   xhr.onerror=function(){
@@ -1351,9 +1639,11 @@ function saveBMRemark(btnEl){
     customerName:custName,dealerName:dealerName,
     pddAgeing:pddAge,pendency:pendency
   };
+  /* Store loanId on button so onload can find it even after re-render */
+  if(btnEl)btnEl.setAttribute('data-saving-lid',loanId);
   pushRemarkToSheet(loanId,payload,btnEl);
-  /* Refresh cases table to show updated inline remark immediately */
-  if(currentTab==='cases')renderTable();
+  /* Do NOT call renderTable() here - it destroys btnEl making it stale */
+  /* The remark is already in _remarksCache so it will show on next render */
 }
 
 /* ── EXPORT REMARKS CSV ── */
@@ -1422,7 +1712,107 @@ function buildReminderFilters(){
   }
 }
 
+function filterBMStatsCards(){
+  var sel=el('bm-stats-filter');
+  var val=sel?sel.value:'';
+  var grid=el('bm-stats-grid');if(!grid)return;
+  var cards=grid.querySelectorAll('.bm-stats-card');
+  cards.forEach(function(card){
+    if(!val||card.getAttribute('data-bm')===val){
+      card.style.display='block';
+    } else {
+      card.style.display='none';
+    }
+  });
+  /* Update grid columns: if single BM selected, show 1 column nicely */
+  if(val){
+    grid.style.gridTemplateColumns='minmax(260px,400px)';
+  } else {
+    grid.style.gridTemplateColumns='';
+  }
+}
+
+function renderReminderStats(){
+  /* ── Summary bar: total, with remarks, pending remarks ── */
+  var myData=getMyData();
+  var total=myData.length;
+  var withRem=0;var withCommit=0;var pendRem=0;
+  myData.forEach(function(r){
+    var lid=String(r['Loan ID']||'').trim();
+    var saved=_remarksCache[lid];
+    if(saved&&saved.remark){withRem++;if(saved.commitDate)withCommit++;}
+    else pendRem++;
+  });
+  var bar=el('rem-summary-bar');
+  if(bar){
+    bar.innerHTML=
+      '<div class="rem-sum-card"><div class="rem-sum-val" style="color:var(--accent)">'+total+'</div><div class="rem-sum-lbl">Total Cases</div></div>'+
+      '<div class="rem-sum-card"><div class="rem-sum-val" style="color:var(--green)">'+withRem+'</div><div class="rem-sum-lbl">Remarks Entered<br><span style="font-size:10px;color:var(--text3)">'+withCommit+' with commit date</span></div></div>'+
+      '<div class="rem-sum-card"><div class="rem-sum-val" style="color:var(--red)">'+pendRem+'</div><div class="rem-sum-lbl">Pending Remarks<br><span style="font-size:10px;color:var(--text3)">No remark entered yet</span></div></div>';
+  }
+  /* ── BM stats cards (only for AM/RH/Admin) ── */
+  var bmSec=el('bm-stats-section');
+  if(!bmSec)return;
+  if(currentRole==='bm'){bmSec.style.display='none';return;}
+  bmSec.style.display='block';
+  var grid=el('bm-stats-grid');if(!grid)return;
+  /* Build per-BM stats */
+  var bmMap={};
+  myData.forEach(function(r){
+    var bm=r._bm||'(Unassigned)';
+    if(!bmMap[bm])bmMap[bm]={lbl:'',p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,total:0,withRem:0,withCommit:0,pendRem:0};
+    bmMap[bm].lbl=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
+    bmMap[bm].total++;
+    var ag=r['PDD Ageing (Days)'];
+    if(ag===AGEING_KEYS[0])bmMap[bm].p120++;
+    else if(ag===AGEING_KEYS[1])bmMap[bm].p90++;
+    else if(ag===AGEING_KEYS[2])bmMap[bm].p60++;
+    else if(ag===AGEING_KEYS[3])bmMap[bm].p45++;
+    else if(ag===AGEING_KEYS[4])bmMap[bm].p30++;
+    else if(ag==='15 Days Above')bmMap[bm].p15++;
+    var lid=String(r['Loan ID']||'').trim();
+    var saved=_remarksCache[lid];
+    if(saved&&saved.remark){bmMap[bm].withRem++;if(saved.commitDate)bmMap[bm].withCommit++;}
+    else bmMap[bm].pendRem++;
+  });
+  var bms=Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;});
+  /* Populate BM filter dropdown */
+  var bmFilterSel=el('bm-stats-filter');
+  if(bmFilterSel){
+    var currentVal=bmFilterSel.value;
+    var opts='<option value="">All BMs ('+bms.length+')</option>';
+    bms.forEach(function(bm){
+      var s=bmMap[bm];
+      var lbl=s.lbl;
+      opts+='<option value="'+esc(bm)+'"'+(currentVal===bm?' selected':'')+'>'+esc(lbl)+' ('+s.total+' cases)</option>';
+    });
+    bmFilterSel.innerHTML=opts;
+  }
+  grid.innerHTML='';
+  bms.forEach(function(bm){
+    var s=bmMap[bm];
+    var pct=s.total>0?Math.round(s.withRem/s.total*100):0;
+    var pctCls=pct>=80?'vok':pct>=50?'v60':'vwarn';
+    var card=document.createElement('div');card.className='bm-stats-card';card.setAttribute('data-bm',bm);
+    card.innerHTML=
+      '<div class="bm-stats-title" title="'+esc(bm)+'">'+esc(s.lbl)+'</div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">Total Cases</span><span class="bm-stats-val">'+s.total+'</span></div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">120D+</span><span class="bm-stats-val v120">'+s.p120+'</span></div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">90D+</span><span class="bm-stats-val v90">'+s.p90+'</span></div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">60D+</span><span class="bm-stats-val v60">'+s.p60+'</span></div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">45D+</span><span class="bm-stats-val v45">'+s.p45+'</span></div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">30D+</span><span class="bm-stats-val v30">'+s.p30+'</span></div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">15D+</span><span class="bm-stats-val v15">'+s.p15+'</span></div>'+
+      '<div class="bm-stats-row" style="margin-top:6px;border-top:2px solid var(--border);padding-top:6px">'+
+        '<span class="bm-stats-lbl">Remarks Entered</span><span class="bm-stats-val vok">'+s.withRem+' ('+pct+'%)</span></div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">With Commit Date</span><span class="bm-stats-val">'+s.withCommit+'</span></div>'+
+      '<div class="bm-stats-row"><span class="bm-stats-lbl">Pending Remarks</span><span class="bm-stats-val '+pctCls+'">'+s.pendRem+'</span></div>';
+    grid.appendChild(card);
+  });
+}
+
 function renderReminders(){
+  renderReminderStats();
   var grid=el('reminder-day-grid');if(!grid)return;
   var bmF=el('rem-bm-filter')?el('rem-bm-filter').value:'';
   var pF =el('rem-pendency-filter')?el('rem-pendency-filter').value:'';
