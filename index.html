@@ -228,6 +228,26 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 .bm-detail-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);background:var(--surface2);text-align:left}
 .bm-detail-tbl td{padding:7px 10px;border-bottom:1px solid #edf2f7;font-size:11px;color:var(--text2)}
 .bm-detail-tbl tbody tr:hover td{background:#f0f7ff}
+.pend-summary-outer{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden}
+.pend-summary-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s;border-bottom:1px solid transparent}
+.pend-summary-header:hover{background:var(--surface2)}
+.pend-summary-outer.expanded .pend-summary-header{border-bottom-color:var(--border)}
+.pend-collapse-icon{font-size:10px;color:var(--text3);transition:transform .2s;display:inline-block}
+.pend-collapse-icon.open{transform:rotate(90deg)}
+.pend-chips-row{display:flex;gap:6px;flex-wrap:wrap}
+.pend-chip{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;font-family:var(--mono)}
+.pend-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.pend-type-card{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;transition:box-shadow .2s,transform .2s}
+.pend-type-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.pend-type-header{padding:8px 12px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:space-between}
+.pend-type-total{font-family:var(--mono);font-size:18px;font-weight:700;padding:10px 12px 2px;color:var(--text)}
+.pend-type-amt{font-family:var(--mono);font-size:11px;color:var(--text2);padding:0 12px 8px}
+.pend-age-bars{padding:8px 12px 10px;border-top:1px solid #edf2f7;display:flex;flex-direction:column;gap:5px}
+.pend-age-bar-row{display:flex;align-items:center;gap:6px;font-size:10px}
+.pend-age-bar-label{width:34px;font-family:var(--mono);font-weight:700;flex-shrink:0}
+.pend-age-bar-track{flex:1;height:8px;background:#f1f5f9;border-radius:100px;overflow:hidden}
+.pend-age-bar-fill{height:100%;border-radius:100px;transition:width .4s ease}
+.pend-age-bar-count{width:24px;text-align:right;font-family:var(--mono);font-weight:700;flex-shrink:0}
 .pend-age-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
 .pend-age-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:#fff;text-align:center;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
 .pend-age-tbl th:first-child{text-align:left;background:#1a2744}
@@ -366,12 +386,14 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 
   <div class="main-content">
 
+
+
+    <!-- Span view: Admin top-page, RH/AM in Reminders tab -->
     <div id="span-section" style="display:none">
       <div class="breadcrumb" id="breadcrumb"></div>
       <div class="section-label" id="span-label">Span View</div>
       <div id="span-container"></div>
     </div>
-
     <div id="bm-ageing-summary" class="bm-ageing-summary" style="display:none"></div>
 
     <div class="tab-row">
@@ -396,23 +418,30 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     <!-- ===== CASES TAB ===== -->
     <div id="section-cases">
       <div class="charts-row">
-        <div class="chart-card" style="overflow-x:auto">
-          <div class="chart-title">Pendency &amp; Ageing Summary — Cases &amp; Disbursed Amount</div>
-          <table class="pend-age-tbl" id="pend-age-tbl">
-            <thead>
-              <tr>
-                <th>Pendency Type</th>
-                <th class="age-120">120D+</th>
-                <th class="age-90">90D+</th>
-                <th class="age-60">60D+</th>
-                <th class="age-45">45D+</th>
-                <th class="age-30">30D+</th>
-                <th class="age-tot">Total</th>
-              </tr>
-            </thead>
-            <tbody id="pend-age-body"></tbody>
-            <tfoot id="pend-age-foot"></tfoot>
-          </table>
+        <div class="pend-summary-outer">
+          <div class="pend-summary-header" onclick="togglePendSummary()">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="pend-collapse-icon" id="pend-collapse-icon">&#9654;</span>
+              <span class="chart-title" style="margin:0">Pendency &amp; Ageing Summary — Cases &amp; Disbursed Amount</span>
+            </div>
+            <span style="font-size:11px;color:var(--text3)" id="pend-toggle-hint">Click to expand</span>
+          </div>
+          <div id="pend-summary-body" style="display:none;overflow-x:auto">
+            <table class="pend-age-tbl" id="pend-age-tbl">
+              <thead>
+                <tr>
+                  <th>Pendency Type</th>
+                  <th class="age-120">120D+</th>
+                  <th class="age-90">90D+</th>
+                  <th class="age-60">60D+</th>
+                  <th class="age-45">45D+</th>
+                  <th class="age-tot">Total</th>
+                </tr>
+              </thead>
+              <tbody id="pend-age-body"></tbody>
+              <tfoot id="pend-age-foot"></tfoot>
+            </table>
+          </div>
         </div>
         <div class="top-channels-card">
           <div class="chart-title">Top 5 Channels &mdash; Highest Pending by Ageing</div>
@@ -454,9 +483,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
                 <th onclick="sortTable('product_type')">Product &#8597;</th>
                 <th onclick="sortTable('Disbursed Amount')">Disb Amt &#8597;</th>
                 <th>RTO Ops Remark</th>
-                <th>BM Remark</th>
-                <th>Commit Date</th>
-                <th>Status</th>
+                <th>BM Remark &amp; Timeline</th>
               </tr>
             </thead>
             <tbody id="table-body"></tbody>
@@ -513,17 +540,14 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
       <!-- Summary bar: total cases, remarks entered, pending remarks -->
       <div class="rem-summary-bar" id="rem-summary-bar"></div>
       <!-- BM-wise ageing + remarks stats cards -->
-      <div id="bm-stats-section" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-          <div class="section-label" style="margin-bottom:0;flex:1">BM-wise Case &amp; Remarks Summary</div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <select class="filter-select" id="bm-stats-filter" onchange="filterBMStatsCards()" style="min-width:180px">
-              <option value="">All BMs</option>
-            </select>
-            <button class="reset-btn" onclick="el('bm-stats-filter').value='';filterBMStatsCards()">Show All</button>
-          </div>
+      <!-- Span Tables: RH sees AM table, AM sees BM table -->
+      <!-- RH sees AM span table; AM sees BM span table -->
+      <div id="rem-span-section" style="display:none;margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div id="rem-breadcrumb" class="breadcrumb"></div>
         </div>
-        <div class="bm-stats-grid" id="bm-stats-grid"></div>
+        <div class="section-label" id="rem-span-label">Span Summary</div>
+        <div id="rem-span-container"></div>
       </div>
       <!-- AM/RH: Filter bar -->
       <div id="reminder-filter-bar" style="display:none">
@@ -692,9 +716,19 @@ function switchTab(tab){
   if(tab==='bank'){renderBankCharts(filteredData.length?filteredData:getMyData());renderBankTable();}
   if(tab==='reminders'){
     buildReminderFilters();
+    /* Show span section in reminders for RH/AM/Admin */
+    var spanRem=el('rem-span-section');
+    if(spanRem){
+      if(currentRole==='bm'){
+        spanRem.style.display='none';
+      } else {
+        spanRem.style.display='block';
+        buildSpanView();
+      }
+    }
     /* If cache not yet loaded, fetch first then render */
     if(!_remarksFetched){
-      fetchRemarksAndRender(function(){renderReminders();});
+      fetchRemarksAndRender(function(){buildSpanView();renderReminders();});
     } else {
       renderReminders();
     }
@@ -723,9 +757,9 @@ function mkCard(title,total,p120,p90,p60,selected){
   c.innerHTML='<div class="span-card-title" title="'+esc(title)+'">'+esc(title)+'</div>'+
     '<div class="span-stats">'+
     '<div class="span-stat s-total"><div class="span-stat-val">'+total+'</div><div class="span-stat-lbl">Total</div></div>'+
-    '<div class="span-stat s-120"><div class="span-stat-val" style="color:#c0392b">'+p120+'</div><div class="span-stat-lbl">120D+</div></div>'+
-    '<div class="span-stat s-90"><div class="span-stat-val" style="color:#c05621">'+p90+'</div><div class="span-stat-lbl">90D+</div></div>'+
-    '<div class="span-stat s-60"><div class="span-stat-val" style="color:#d97706">'+p60+'</div><div class="span-stat-lbl">60D+</div></div>'+
+    '<div class="span-stat s-120"><div class="span-stat-val" style="color:#c0392b">'+p120+'</div><div class="span-stat-lbl" title="Exact 120D+ cases">120D+</div></div>'+
+    '<div class="span-stat s-90"><div class="span-stat-val" style="color:#c05621">'+p90+'</div><div class="span-stat-lbl" title="Exact 90D+ cases">90D+</div></div>'+
+    '<div class="span-stat s-60"><div class="span-stat-val" style="color:#d97706">'+p60+'</div><div class="span-stat-lbl" title="Exact 60D+ cases">60D+</div></div>'+
     '</div>';
   return c;
 }
@@ -739,108 +773,109 @@ function buildSpanView(){
 function buildAdminRHSpan(container){
   var scopeData=(currentRole==='rh')?DATA.filter(function(r){return r._rhLower===currentUser.toLowerCase();}):DATA;
   var bc=el('breadcrumb');
-  if(bc){
-    if(!drillAM){
-      bc.innerHTML='<span class="breadcrumb-current">'+(currentRole==='rh'?'AM Span View':'All Area Managers')+'</span>';
-    } else {
-      var a1=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
-      bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(a1)+' — BM Summary</span>';
-    }
-  }
   var lbl=el('span-label');
+
+  /* Helper: build ageing counts NON-cumulatively for a dataset */
+  function ageMap(data){
+    var m={total:data.length,p120:0,p90:0,p60:0};
+    data.forEach(function(r){
+      var ag=r['PDD Ageing (Days)'];
+      if(ag===AGEING_KEYS[0])m.p120++;
+      else if(ag===AGEING_KEYS[1])m.p90++;
+      else if(ag===AGEING_KEYS[2])m.p60++;
+    });
+    return m;
+  }
+
   if(!drillAM){
-    /* ── RH/Admin: AM summary table ── */
-    if(lbl)lbl.textContent=(currentRole==='rh'?'Area Manager Span':'All Area Managers')+' — Summary';
+    /* ── RH/Admin: AM span cards ── */
+    if(bc)bc.innerHTML='<span class="breadcrumb-current">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span>';
+    if(lbl)lbl.textContent=(currentRole==='rh'?'Area Managers Under Your Span':'All Area Managers');
+
     var amMap={};
     scopeData.forEach(function(r){
       var am=r._am||'(Unassigned)';
-      if(!amMap[am])amMap[am]={am:am,lbl:'',total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
-      amMap[am].lbl=am.indexOf('@')>-1?am.split('@')[0]:am;
-      amMap[am].total++;
-      var ag=r['PDD Ageing (Days)'];
-      if(ag===AGEING_KEYS[0])amMap[am].p120++;else if(ag===AGEING_KEYS[1])amMap[am].p90++;
-      else if(ag===AGEING_KEYS[2])amMap[am].p60++;else if(ag===AGEING_KEYS[3])amMap[am].p45++;
-      else if(ag===AGEING_KEYS[4])amMap[am].p30++;else if(ag==='15 Days Above')amMap[am].p15++;
-      var lid=String(r['Loan ID']||'').trim();
-      var saved=_remarksCache[lid];
-      if(saved&&saved.remark)amMap[am].remDone++;else amMap[am].remPend++;
+      if(!amMap[am])amMap[am]=[];
+      amMap[am].push(r);
     });
-    var ams=Object.keys(amMap).sort(function(a,b){return amMap[b].total-amMap[a].total;});
-    /* Build table */
-    var wrap=document.createElement('div');wrap.className='table-card';
-    var totR={total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
-    var rows='';
-    ams.forEach(function(am){
-      var s=amMap[am];
-      Object.keys(totR).forEach(function(k){totR[k]+=s[k];});
-      var pct=s.total>0?Math.round(s.remDone/s.total*100):0;
-      rows+='<tr data-am="'+esc(am)+'" onclick="selectAMRow(this,\''+am.replace(/'/g,"\\'")+'\')">'+
-        '<td class="name-cell">'+esc(s.lbl)+'</td>'+
-        '<td class="center">'+s.total+'</td>'+
-        '<td class="center"><span class="age-pill ap120">'+s.p120+'</span></td>'+
-        '<td class="center"><span class="age-pill ap90">'+s.p90+'</span></td>'+
-        '<td class="center"><span class="age-pill ap60">'+s.p60+'</span></td>'+
-        '<td class="center"><span class="age-pill ap45">'+s.p45+'</span></td>'+
-        '<td class="center"><span class="age-pill ap30">'+s.p30+'</span></td>'+
-        '<td class="center"><span class="age-pill ap15">'+s.p15+'</span></td>'+
-        '<td class="center"><span class="rem-done">'+s.remDone+'</span><span class="rem-pct">'+pct+'%</span></td>'+
-        '<td class="center"><span class="rem-pend">'+s.remPend+'</span></td>'+
-        '<td class="center" style="font-size:10px;color:var(--accent)">View BMs &rsaquo;</td>'+
-        '</tr>';
+
+    var grid=document.createElement('div');grid.className='span-grid';
+
+    /* All AMs summary card */
+    var allM=ageMap(scopeData);
+    var allCard=mkCard('All AMs',allM.total,allM.p120,allM.p90,allM.p60,!drillAM);
+    allCard.onclick=function(){drillAM=null;drillBM=null;buildSpanView();applyFilters();};
+    grid.appendChild(allCard);
+
+    Object.keys(amMap).sort(function(a,b){return amMap[b].length-amMap[a].length;}).forEach(function(am){
+      var m=ageMap(amMap[am]);
+      var lbl2=am.indexOf('@')>-1?am.split('@')[0]:am;
+      var card=mkCard(lbl2,m.total,m.p120,m.p90,m.p60,drillAM===am);
+      (function(a2){card.onclick=function(){drillAM=a2;drillBM=null;buildSpanView();applyFilters();};})(am);
+      grid.appendChild(card);
     });
-    var pctTot=totR.total>0?Math.round(totR.remDone/totR.total*100):0;
-    wrap.innerHTML=
-      '<div class="table-header-row"><div class="table-count">Click any AM row to view their BM breakdown</div></div>'+
-      '<div class="span-table-wrap"><table class="span-tbl">'+
-      '<thead><tr>'+
-        '<th>AM Name</th><th class="center">Total</th>'+
-        '<th class="center">120D+</th><th class="center">90D+</th><th class="center">60D+</th>'+
-        '<th class="center">45D+</th><th class="center">30D+</th><th class="center">15D+</th>'+
-        '<th class="center">Remarks Done</th><th class="center">Rem Pending</th><th class="center"></th>'+
-      '</tr></thead>'+
-      '<tbody>'+rows+'</tbody>'+
-      '<tfoot><tr>'+
-        '<td><strong>Total</strong></td>'+
-        '<td class="center"><strong>'+totR.total+'</strong></td>'+
-        '<td class="center"><span class="age-pill ap120">'+totR.p120+'</span></td>'+
-        '<td class="center"><span class="age-pill ap90">'+totR.p90+'</span></td>'+
-        '<td class="center"><span class="age-pill ap60">'+totR.p60+'</span></td>'+
-        '<td class="center"><span class="age-pill ap45">'+totR.p45+'</span></td>'+
-        '<td class="center"><span class="age-pill ap30">'+totR.p30+'</span></td>'+
-        '<td class="center"><span class="age-pill ap15">'+totR.p15+'</span></td>'+
-        '<td class="center"><span class="rem-done">'+totR.remDone+'</span><span class="rem-pct">'+pctTot+'%</span></td>'+
-        '<td class="center"><span class="rem-pend">'+totR.remPend+'</span></td>'+
-        '<td></td>'+
-      '</tr></tfoot>'+
-      '</table></div>'+
-      '<div id="am-bm-detail-panel"></div>';
-    container.appendChild(wrap);
-  } else {
-    /* ── Drilled into AM → show BM table ── */
-    var amLbl2=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
-    if(lbl)lbl.textContent='BMs under '+amLbl2;
+    container.appendChild(grid);
+
+  } else if(!drillBM){
+    /* ── Drilled into AM → show BM span cards ── */
+    var amLbl=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
+    if(bc)bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(amLbl)+' — BM Span</span>';
+    if(lbl)lbl.textContent='Branch Managers under '+amLbl;
+
     var amData=scopeData.filter(function(r){return r._amLower===drillAM.toLowerCase();});
-    container.appendChild(buildBMTable(amData,'Click any BM row to see case details',function(bmName){
-      drillBM=bmName;buildSpanView();applyFilters();
-    }));
+    var bmMap={};
+    amData.forEach(function(r){
+      var bm=r._bm||'(Unassigned)';
+      if(!bmMap[bm])bmMap[bm]=[];
+      bmMap[bm].push(r);
+    });
+
+    var grid2=document.createElement('div');grid2.className='span-grid';
+
+    /* All BMs of this AM card */
+    var allM2=ageMap(amData);
+    var allCard2=mkCard('All BMs ('+amLbl+')',allM2.total,allM2.p120,allM2.p90,allM2.p60,!drillBM);
+    allCard2.onclick=function(){drillBM=null;buildSpanView();applyFilters();};
+    grid2.appendChild(allCard2);
+
+    Object.keys(bmMap).sort(function(a,b){return bmMap[b].length-bmMap[a].length;}).forEach(function(bm){
+      var m=ageMap(bmMap[bm]);
+      var lbl3=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
+      var card=mkCard(lbl3,m.total,m.p120,m.p90,m.p60,drillBM===bm);
+      (function(b2){card.onclick=function(){drillBM=b2;buildSpanView();applyFilters();};})(bm);
+      grid2.appendChild(card);
+    });
+    container.appendChild(grid2);
+
+  } else {
+    /* ── BM selected → show both levels with highlight ── */
+    var amLbl2=drillAM.indexOf('@')>-1?drillAM.split('@')[0]:drillAM;
+    var bmLbl=drillBM.indexOf('@')>-1?drillBM.split('@')[0]:drillBM;
+    if(bc)bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-item" onclick="drillUpAM()">'+esc(amLbl2)+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(bmLbl)+'</span>';
+    if(lbl)lbl.textContent='Branch Managers under '+amLbl2;
+
+    var amData2=scopeData.filter(function(r){return r._amLower===drillAM.toLowerCase();});
+    var bmMap2={};
+    amData2.forEach(function(r){var bm=r._bm||'(Unassigned)';if(!bmMap2[bm])bmMap2[bm]=[];bmMap2[bm].push(r);});
+    var grid3=document.createElement('div');grid3.className='span-grid';
+    var allM3=ageMap(amData2);
+    var allCard3=mkCard('All BMs ('+amLbl2+')',allM3.total,allM3.p120,allM3.p90,allM3.p60,false);
+    allCard3.onclick=function(){drillBM=null;buildSpanView();applyFilters();};
+    grid3.appendChild(allCard3);
+    Object.keys(bmMap2).sort(function(a,b){return bmMap2[b].length-bmMap2[a].length;}).forEach(function(bm){
+      var m=ageMap(bmMap2[bm]);var lbl4=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
+      var card=mkCard(lbl4,m.total,m.p120,m.p90,m.p60,drillBM===bm);
+      (function(b2){card.onclick=function(){drillBM=b2;buildSpanView();applyFilters();};})(b2);
+      grid3.appendChild(card);
+    });
+    container.appendChild(grid3);
   }
 }
 
+
 function selectAMRow(tr,amName){
-  /* Highlight row */
-  tr.closest('tbody').querySelectorAll('tr').forEach(function(r){r.classList.remove('selected-row');});
-  tr.classList.add('selected-row');
-  /* Set drillAM and rebuild but stay on same page (don't call applyFilters) */
-  drillAM=amName;drillBM=null;
-  var bc=el('breadcrumb');
-  if(bc){var a1=amName.indexOf('@')>-1?amName.split('@')[0]:amName;bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">'+(currentRole==='rh'?'AM Span':'All AMs')+'</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(a1)+' — BM Summary</span>';}
-  var lbl=el('span-label');if(lbl){var a1b=amName.indexOf('@')>-1?amName.split('@')[0]:amName;lbl.textContent='BMs under '+a1b;}
-  var panel=el('am-bm-detail-panel');if(!panel)return;
-  panel.innerHTML='';
-  var amData=(currentRole==='rh')?DATA.filter(function(r){return r._rhLower===currentUser.toLowerCase()&&r._amLower===amName.toLowerCase();}):DATA.filter(function(r){return r._amLower===amName.toLowerCase();});
-  panel.appendChild(buildBMTable(amData,'BM summary for '+( amName.indexOf('@')>-1?amName.split('@')[0]:amName),function(bmName){
-    drillBM=bmName;buildSpanView();applyFilters();
-  }));
+  /* Drill into AM — now handled by card click in buildAdminRHSpan */
+  drillAM=amName;drillBM=null;buildSpanView();applyFilters();
 }
 
 function buildBMTable(data,hint,onClickBM){
@@ -912,30 +947,77 @@ function buildBMTable(data,hint,onClickBM){
 function buildAMSpan(container){
   var amData=DATA.filter(function(r){return r._amLower===currentUser.toLowerCase();});
   var bc=el('breadcrumb');
-  if(bc){
-    if(!amDrillBM){
-      bc.innerHTML='<span class="breadcrumb-current">BM Summary</span>';
-    } else {
-      var bmLbl=amDrillBM.indexOf('@')>-1?amDrillBM.split('@')[0]:amDrillBM;
-      bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">BM Summary</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(bmLbl)+'</span>';
-    }
-  }
-  var lbl=el('span-label');if(lbl)lbl.textContent='Branch Manager Summary';
+  var lbl=el('span-label');
 
-  var tblWrap=buildBMTable(amData,'Click any BM to filter their cases below',function(bmName){
-    amDrillBM=bmName;
-    buildSpanView();applyFilters();
-  });
+  if(!amDrillBM){
+    /* Show BM span cards */
+    if(bc)bc.innerHTML='<span class="breadcrumb-current">BM Span</span>';
+    if(lbl)lbl.textContent='Branch Managers Under Your Span';
 
-  /* If a BM is drilled into, highlight that row after render */
-  container.appendChild(tblWrap);
-  if(amDrillBM){
-    var rows=tblWrap.querySelectorAll('tbody tr');
-    rows.forEach(function(r){
-      if(r.querySelector('.name-cell')&&r.querySelector('.name-cell').title===amDrillBM){
-        r.classList.add('selected-row');
-      }
+    /* Build BM map — NON-cumulative ageing counts */
+    var bmMap={};
+    amData.forEach(function(r){
+      var bm=r._bm||'(Unassigned)';
+      if(!bmMap[bm])bmMap[bm]={total:0,p120:0,p90:0,p60:0};
+      bmMap[bm].total++;
+      var ag=r['PDD Ageing (Days)'];
+      if(ag===AGEING_KEYS[0])bmMap[bm].p120++;       /* exact 120D+ */
+      else if(ag===AGEING_KEYS[1])bmMap[bm].p90++;   /* exact 90D+  */
+      else if(ag===AGEING_KEYS[2])bmMap[bm].p60++;   /* exact 60D+  */
     });
+
+    var grid=document.createElement('div');grid.className='span-grid';
+
+    /* "All BMs" summary card */
+    var allTotal=amData.length;
+    var all120=amData.filter(function(r){return r['PDD Ageing (Days)']===AGEING_KEYS[0];}).length;
+    var all90 =amData.filter(function(r){return r['PDD Ageing (Days)']===AGEING_KEYS[1];}).length;
+    var all60 =amData.filter(function(r){return r['PDD Ageing (Days)']===AGEING_KEYS[2];}).length;
+    var allCard=mkCard('All BMs',allTotal,all120,all90,all60,!amDrillBM);
+    allCard.onclick=function(){amDrillBM=null;buildSpanView();applyFilters();};
+    grid.appendChild(allCard);
+
+    Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;}).forEach(function(bm){
+      var s=bmMap[bm];
+      var lbl2=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
+      var card=mkCard(lbl2,s.total,s.p120,s.p90,s.p60,amDrillBM===bm);
+      (function(b2){card.onclick=function(){amDrillBM=b2;buildSpanView();applyFilters();};})(bm);
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+
+  } else {
+    /* BM selected — show breadcrumb + filter applied via applyFilters */
+    var bmLbl=amDrillBM.indexOf('@')>-1?amDrillBM.split('@')[0]:amDrillBM;
+    if(bc)bc.innerHTML='<span class="breadcrumb-item" onclick="drillUpTop()">BM Span</span><span class="breadcrumb-sep"> &rsaquo; </span><span class="breadcrumb-current">'+esc(bmLbl)+'</span>';
+    if(lbl)lbl.textContent='Branch Managers Under Your Span';
+
+    /* Re-render cards with selected BM highlighted */
+    var bmMap2={};
+    amData.forEach(function(r){
+      var bm=r._bm||'(Unassigned)';
+      if(!bmMap2[bm])bmMap2[bm]={total:0,p120:0,p90:0,p60:0};
+      bmMap2[bm].total++;
+      var ag=r['PDD Ageing (Days)'];
+      if(ag===AGEING_KEYS[0])bmMap2[bm].p120++;
+      else if(ag===AGEING_KEYS[1])bmMap2[bm].p90++;
+      else if(ag===AGEING_KEYS[2])bmMap2[bm].p60++;
+    });
+    var grid2=document.createElement('div');grid2.className='span-grid';
+    var allT=amData.length;
+    var a120=amData.filter(function(r){return r['PDD Ageing (Days)']===AGEING_KEYS[0];}).length;
+    var a90 =amData.filter(function(r){return r['PDD Ageing (Days)']===AGEING_KEYS[1];}).length;
+    var a60 =amData.filter(function(r){return r['PDD Ageing (Days)']===AGEING_KEYS[2];}).length;
+    var allCard2=mkCard('All BMs',allT,a120,a90,a60,false);
+    allCard2.onclick=function(){amDrillBM=null;buildSpanView();applyFilters();};
+    grid2.appendChild(allCard2);
+    Object.keys(bmMap2).sort(function(a,b){return bmMap2[b].total-bmMap2[a].total;}).forEach(function(bm){
+      var s=bmMap2[bm];var lbl3=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
+      var card=mkCard(lbl3,s.total,s.p120,s.p90,s.p60,amDrillBM===bm);
+      (function(b2){card.onclick=function(){amDrillBM=b2;buildSpanView();applyFilters();};})(bm);
+      grid2.appendChild(card);
+    });
+    container.appendChild(grid2);
   }
 }
 
@@ -1004,7 +1086,15 @@ function refreshAll(){
     if(bmSummary)bmSummary.style.display='flex';
     buildBMAgeing(getMyData());
     if(amAgeFilter)amAgeFilter.style.display='none';
+  } else if(currentRole==='admin'){
+    /* Admin sees span cards on top page */
+    if(spanSec)spanSec.style.display='block';
+    if(bmSummary)bmSummary.style.display='none';
+    buildSpanView();
+    if(amAgeFilter)amAgeFilter.style.display='block';
+    buildAMAgeing();
   } else {
+    /* RH, AM: show span cards on top page */
     if(spanSec)spanSec.style.display='block';
     if(bmSummary)bmSummary.style.display='none';
     buildSpanView();
@@ -1092,31 +1182,56 @@ function renderCasesCharts(data){
   if(!chs.length)tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text3)">No data</td></tr>';
 }
 
+function togglePendSummary(){
+  var body=el('pend-summary-body');
+  var icon=el('pend-collapse-icon');
+  var hint=el('pend-toggle-hint');
+  if(!body)return;
+  var isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  if(icon)icon.className='pend-collapse-icon'+(isOpen?'':' open');
+  if(hint)hint.textContent=isOpen?'Click to expand':'Click to collapse';
+}
+
 function renderPendAgeTable(data){
   var tbody=el('pend-age-body');var tfoot=el('pend-age-foot');
   if(!tbody)return;
-  /* Build map: pendency -> { per ageing: {count, amt} } */
+
+  /* Only show actually pending cases (exclude No pending) */
+  var AGES=['120 Days Above','90 Days Above','60 Days Above','45 Days Above'];
+  var AGE_LBLS={'120 Days Above':'120D+','90 Days Above':'90D+','60 Days Above':'60D+','45 Days Above':'45D+'};
+
+  /* Build map: pendency -> { per ageing: {count, amt} } — skip No pending */
   var pMap={};
-  var AGES=['120 Days Above','90 Days Above','60 Days Above','45 Days Above','30 Days Above'];
   data.forEach(function(r){
-    var p=r._pendency||'Unknown';var ag=r['PDD Ageing (Days)'];var amt=r._amt||0;
+    var p=r._pendency||'Unknown';
+    if(!p||p==='No pending')return;          /* skip resolved */
+    var ag=r['PDD Ageing (Days)'];
+    if(AGES.indexOf(ag)===-1)return;          /* only 120+/90+/60+/45+ */
+    var amt=r._amt||0;
     if(!pMap[p])pMap[p]={};
     if(!pMap[p][ag])pMap[p][ag]={cnt:0,amt:0};
     pMap[p][ag].cnt++;pMap[p][ag].amt+=amt;
   });
-  /* Sort pendencies: No pending last, rest by total count desc */
+
+  /* Sort by total count desc */
   var pKeys=Object.keys(pMap).sort(function(a,b){
-    if(a==='No pending')return 1;if(b==='No pending')return -1;
     var ta=AGES.reduce(function(s,ag){return s+(pMap[a][ag]?pMap[a][ag].cnt:0);},0);
     var tb=AGES.reduce(function(s,ag){return s+(pMap[b][ag]?pMap[b][ag].cnt:0);},0);
     return tb-ta;
   });
+
   var totals={};AGES.forEach(function(ag){totals[ag]={cnt:0,amt:0};});
   var totTotal={cnt:0,amt:0};
+
   function mkCell(obj){
-    if(!obj||!obj.cnt)return '<td>—</td>';
-    return '<td><div class="pend-age-cell"><span class="pend-age-count">'+obj.cnt+'</span><span class="pend-age-amt">'+fmtAmt(obj.amt)+'</span></div></td>';
+    if(!obj||!obj.cnt)return '<td style="text-align:center;color:var(--text3)">—</td>';
+    return '<td><div class="pend-age-cell">'+
+      '<span class="pend-age-count">'+obj.cnt+'</span>'+
+      '<span class="pend-age-amt">'+fmtAmt(obj.amt)+'</span>'+
+      '</div></td>';
   }
+
   var rows='';
   pKeys.forEach(function(p){
     var rowTotal={cnt:0,amt:0};
@@ -1124,22 +1239,38 @@ function renderPendAgeTable(data){
     AGES.forEach(function(ag){
       var obj=pMap[p][ag]||null;
       cells+=mkCell(obj);
-      if(obj){rowTotal.cnt+=obj.cnt;rowTotal.amt+=obj.amt;totals[ag].cnt+=obj.cnt;totals[ag].amt+=obj.amt;totTotal.cnt+=obj.cnt;totTotal.amt+=obj.amt;}
+      if(obj){rowTotal.cnt+=obj.cnt;rowTotal.amt+=obj.amt;
+        totals[ag].cnt+=obj.cnt;totals[ag].amt+=obj.amt;
+        totTotal.cnt+=obj.cnt;totTotal.amt+=obj.amt;}
     });
     var pCls=getPCls(p);
     rows+='<tr>'+
       '<td><span class="pendency-tag '+pCls+'" style="font-size:11px">'+esc(p)+'</span></td>'+
       cells+
-      '<td><div class="pend-age-cell"><span class="pend-age-count" style="color:var(--accent)">'+rowTotal.cnt+'</span><span class="pend-age-amt">'+fmtAmt(rowTotal.amt)+'</span></div></td>'+
+      '<td><div class="pend-age-cell">'+
+        '<span class="pend-age-count" style="color:var(--accent)">'+rowTotal.cnt+'</span>'+
+        '<span class="pend-age-amt">'+fmtAmt(rowTotal.amt)+'</span>'+
+      '</div></td>'+
       '</tr>';
   });
+
+  if(!pKeys.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">No pending cases in 120D+/90D+/60D+/45D+</td></tr>';
+    tfoot.innerHTML='';return;
+  }
+
   tbody.innerHTML=rows;
-  /* Footer totals */
+
+  /* Footer totals row */
   var footCells='';
-  AGES.forEach(function(ag){footCells+=mkCell(totals[ag]||null);});
+  AGES.forEach(function(ag){footCells+=mkCell(totals[ag].cnt?totals[ag]:null);});
   tfoot.innerHTML='<tr>'+
-    '<td><strong>Total</strong></td>'+footCells+
-    '<td><div class="pend-age-cell"><span class="pend-age-count" style="color:var(--accent)">'+totTotal.cnt+'</span><span class="pend-age-amt">'+fmtAmt(totTotal.amt)+'</span></div></td>'+
+    '<td><strong>Total Pending</strong></td>'+
+    footCells+
+    '<td><div class="pend-age-cell">'+
+      '<span class="pend-age-count" style="color:var(--accent)"><strong>'+totTotal.cnt+'</strong></span>'+
+      '<span class="pend-age-amt">'+fmtAmt(totTotal.amt)+'</span>'+
+    '</div></td>'+
     '</tr>';
 }
 
@@ -1443,8 +1574,8 @@ function fetchAndCacheRemarks(){
       /* Re-render whatever tab is currently active */
       if(currentTab==='cases')renderTable();
       if(currentTab==='reminders'){buildReminderFilters();renderReminderStats();renderReminders();}
-      /* Refresh span tables when remarks update */
-      if(currentRole==='rh'||currentRole==='am'||currentRole==='admin'){buildSpanView();}
+      /* Refresh span tables when remarks update (only if on reminders tab) */
+      if(currentTab==='reminders'&&(currentRole==='rh'||currentRole==='am'||currentRole==='admin')){buildSpanView();}
       if(currentTab==='bank'){renderBankCharts(filteredData.length?filteredData:getMyData());renderBankTable();}
     }catch(e){console.warn('Remarks parse error:',e);}
   };
@@ -1582,35 +1713,72 @@ function getBMRemarkCell(loanId,idx,r){
   var today=todayIST();
 
   if(isBM){
+    /* BM view: saved summary on top + editable fields below */
     var statusOpts=
       '<option value="Open"'+(status==='Open'?' selected':'')+'>Open</option>'+
       '<option value="Done"'+(status==='Done'?' selected':'')+'>Done</option>';
-    return '<td style="min-width:170px;vertical-align:top" '+
+
+    /* Build saved-remark view section (only shown when there's a saved remark) */
+    var savedView='';
+    if(saved&&saved.remark){
+      var diff=daysFromToday(commitDate);
+      var dCls=diff===null?'':diff===0?'days-today':diff<0?'days-overdue':diff<=2?'days-today':'days-upcoming';
+      if(status==='Done')dCls='days-done';
+      var sCls=status==='Done'?'status-done':diff<0?'status-overdue':'status-open';
+      savedView=
+        '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 8px">'+
+        '<div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Saved Remark</div>'+
+        '<div style="font-size:11px;color:var(--text);line-height:1.4;word-break:break-word">'+esc(saved.remark)+'</div>'+
+        (commitDate?
+          '<div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap">'+
+          '<span style="font-family:var(--mono);font-size:10px;color:var(--text2)">&#128197; '+esc(commitDate)+'</span>'+
+          '<span class="days-badge '+dCls+'" style="font-size:10px">'+getDayLabel(diff)+'</span>'+
+          '<span class="status-badge '+sCls+'" style="font-size:10px">'+esc(status)+'</span>'+
+          '</div>':'')+
+        '</div>';
+    }
+
+    /* Side-by-side layout: saved view on left | edit fields on right */
+    return '<td style="min-width:340px;vertical-align:top;padding:8px" '+
       'data-lid="'+esc(loanId)+'" '+
       'data-cust="'+esc(r['Customer Name']||'')+'" '+
       'data-dealer="'+esc(r['Dealer Name']||'')+'" '+
       'data-age="'+esc(r['PDD Ageing (Days)']||'')+'" '+
       'data-pend="'+esc(r._pendency||'')+'" '+
       '>'+
-      '<textarea class="bm-remark-input" id="bri-'+idx+'" rows="2" placeholder="Enter remark\u2026">'+esc(remark)+'</textarea>'+
-      '<input type="date" class="commit-date-input" id="brd-'+idx+'" value="'+esc(commitDate)+'" min="'+today+'">'+
-      '<select class="bm-status-sel" id="brs-'+idx+'">'+statusOpts+'</select>'+
-      '<button class="bm-save-btn" id="brsb-'+idx+'" data-rowidx="'+idx+'" onclick="saveBMRemark(this)">Save &amp; Sync</button>'+
+      '<div style="display:flex;gap:8px;align-items:flex-start">'+
+        /* Left: saved remark view */
+        (saved&&saved.remark
+          ? '<div style="flex:1;min-width:0">'+savedView+'</div>'
+          : '<div style="flex:1;min-width:0;color:var(--text3);font-size:11px;padding-top:4px;font-style:italic">No remark yet</div>'
+        )+
+        /* Vertical divider */
+        '<div style="width:1px;background:var(--border);align-self:stretch;flex-shrink:0;margin:0 2px"></div>'+
+        /* Right: edit fields */
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Edit</div>'+
+          '<textarea class="bm-remark-input" id="bri-'+idx+'" rows="3" placeholder="Add remark\u2026" style="width:100%">'+esc(remark)+'</textarea>'+
+          '<input type="date" class="commit-date-input" id="brd-'+idx+'" value="'+esc(commitDate)+'" min="'+today+'" style="width:100%;margin-top:4px">'+
+          '<select class="bm-status-sel" id="brs-'+idx+'" style="width:100%;margin-top:3px">'+statusOpts+'</select>'+
+          '<button class="bm-save-btn" id="brsb-'+idx+'" data-rowidx="'+idx+'" onclick="saveBMRemark(this)" style="margin-top:4px;width:100%">Save &amp; Sync</button>'+
+        '</div>'+
+      '</div>'+
       '</td>';
+
   } else {
+    /* AM / RH / Admin: read-only view */
     if(!saved||!saved.remark){
-      return '<td style="min-width:140px;color:var(--text3);font-size:11px;vertical-align:top">'+
-        (commitDate?'':'—')+'</td>';
+      return '<td style="min-width:140px;color:var(--text3);font-size:11px;vertical-align:top;padding:8px">—</td>';
     }
-    var diff=daysFromToday(commitDate);
-    var dCls=diff===null?'':diff===0?'days-today':diff<0?'days-overdue':diff<=2?'days-today':'days-upcoming';
-    if(status==='Done')dCls='days-done';
-    var sCls=status==='Done'?'status-done':diff<0?'status-overdue':'status-open';
-    return '<td style="min-width:140px;vertical-align:top">'+
+    var diff2=daysFromToday(commitDate);
+    var dCls2=diff2===null?'':diff2===0?'days-today':diff2<0?'days-overdue':diff2<=2?'days-today':'days-upcoming';
+    if(status==='Done')dCls2='days-done';
+    var sCls2=status==='Done'?'status-done':diff2<0?'status-overdue':'status-open';
+    return '<td style="min-width:160px;vertical-align:top;padding:8px">'+
       '<div class="remark-view-cell">'+esc(remark)+'</div>'+
-      (commitDate?'<div class="commit-view" style="margin-top:3px">'+esc(commitDate)+'</div>':'')+
-      (commitDate?'<span class="days-badge '+dCls+'" style="margin-top:2px;display:inline-block">'+getDayLabel(diff)+'</span>':'')+
-      ' <span class="status-badge '+sCls+'" style="margin-top:2px;display:inline-block">'+esc(status)+'</span>'+
+      (commitDate?'<div class="commit-view" style="margin-top:3px">&#128197; '+esc(commitDate)+'</div>':'')+
+      (commitDate?'<span class="days-badge '+dCls2+'" style="margin-top:2px;display:inline-block">'+getDayLabel(diff2)+'</span>':'')+
+      ' <span class="status-badge '+sCls2+'" style="margin-top:2px;display:inline-block">'+esc(status)+'</span>'+
       '</td>';
   }
 }
@@ -1631,7 +1799,7 @@ function saveBMRemark(btnEl){
   var status    =el('brs-'+idx)?el('brs-'+idx).value:'Open';
   var bmDisplay =el('hdr-name')?el('hdr-name').textContent:currentUser;
   if(!loanId){console.warn('saveBMRemark: no loanId found');return;}
-  /* Update local cache immediately so UI refreshes */
+  /* Update local cache immediately so BM sees saved remark view right away */
   _remarksCache[loanId]={remark:remark,commitDate:commitDate,status:status,bmUser:currentUser,bmDisplay:bmDisplay};
   var payload={
     remark:remark,commitDate:commitDate,status:status,
@@ -1639,11 +1807,12 @@ function saveBMRemark(btnEl){
     customerName:custName,dealerName:dealerName,
     pddAgeing:pddAge,pendency:pendency
   };
-  /* Store loanId on button so onload can find it even after re-render */
+  /* Stamp loanId on button so onload can find it after re-render */
   if(btnEl)btnEl.setAttribute('data-saving-lid',loanId);
   pushRemarkToSheet(loanId,payload,btnEl);
-  /* Do NOT call renderTable() here - it destroys btnEl making it stale */
-  /* The remark is already in _remarksCache so it will show on next render */
+  /* For BM: re-render table so saved-remark view appears immediately above the edit fields */
+  /* We do this AFTER stamping data-saving-lid so the button can be re-found */
+  if(currentTab==='cases')renderTable();
 }
 
 /* ── EXPORT REMARKS CSV ── */
@@ -1712,37 +1881,21 @@ function buildReminderFilters(){
   }
 }
 
-function filterBMStatsCards(){
-  var sel=el('bm-stats-filter');
-  var val=sel?sel.value:'';
-  var grid=el('bm-stats-grid');if(!grid)return;
-  var cards=grid.querySelectorAll('.bm-stats-card');
-  cards.forEach(function(card){
-    if(!val||card.getAttribute('data-bm')===val){
-      card.style.display='block';
-    } else {
-      card.style.display='none';
-    }
-  });
-  /* Update grid columns: if single BM selected, show 1 column nicely */
-  if(val){
-    grid.style.gridTemplateColumns='minmax(260px,400px)';
-  } else {
-    grid.style.gridTemplateColumns='';
-  }
-}
+function filterBMStatsCards(){/* removed - span tables handle this now */}
+
 
 function renderReminderStats(){
-  /* ── Summary bar: total, with remarks, pending remarks ── */
   var myData=getMyData();
   var total=myData.length;
-  var withRem=0;var withCommit=0;var pendRem=0;
+  var withRem=0,withCommit=0,pendRem=0;
   myData.forEach(function(r){
     var lid=String(r['Loan ID']||'').trim();
     var saved=_remarksCache[lid];
     if(saved&&saved.remark){withRem++;if(saved.commitDate)withCommit++;}
     else pendRem++;
   });
+
+  /* ── 3-card summary bar ── */
   var bar=el('rem-summary-bar');
   if(bar){
     bar.innerHTML=
@@ -1750,18 +1903,108 @@ function renderReminderStats(){
       '<div class="rem-sum-card"><div class="rem-sum-val" style="color:var(--green)">'+withRem+'</div><div class="rem-sum-lbl">Remarks Entered<br><span style="font-size:10px;color:var(--text3)">'+withCommit+' with commit date</span></div></div>'+
       '<div class="rem-sum-card"><div class="rem-sum-val" style="color:var(--red)">'+pendRem+'</div><div class="rem-sum-lbl">Pending Remarks<br><span style="font-size:10px;color:var(--text3)">No remark entered yet</span></div></div>';
   }
-  /* ── BM stats cards (only for AM/RH/Admin) ── */
-  var bmSec=el('bm-stats-section');
-  if(!bmSec)return;
-  if(currentRole==='bm'){bmSec.style.display='none';return;}
-  bmSec.style.display='block';
-  var grid=el('bm-stats-grid');if(!grid)return;
-  /* Build per-BM stats */
+
+  /* ── Span tables: RH→AM table | AM→BM table ── */
+  var spanSec=el('rem-span-section');
+  var spanCon=el('rem-span-container');
+  var spanLbl=el('rem-span-label');
+  var bc=el('rem-breadcrumb');
+  if(!spanSec||!spanCon)return;
+
+  if(currentRole==='bm'){spanSec.style.display='none';return;}
+  spanSec.style.display='block';
+  spanCon.innerHTML='';
+
+  if(currentRole==='rh'||currentRole==='admin'){
+    /* RH/Admin: show AM summary table */
+    if(spanLbl)spanLbl.textContent='AM-wise Summary — Total Cases, Remarks Done & Pending';
+    if(bc)bc.innerHTML='<span class="breadcrumb-current">AM Span</span>';
+    var scopeData=(currentRole==='rh')?DATA.filter(function(r){return r._rhLower===currentUser.toLowerCase();}):DATA;
+    spanCon.appendChild(buildRemAMTable(scopeData));
+
+  } else if(currentRole==='am'){
+    /* AM: show BM summary table */
+    if(spanLbl)spanLbl.textContent='BM-wise Summary — Cases, Remarks Done & Pending';
+    if(bc)bc.innerHTML='<span class="breadcrumb-current">BM Span</span>';
+    var amData=DATA.filter(function(r){return r._amLower===currentUser.toLowerCase();});
+    spanCon.appendChild(buildRemBMTable(amData,'Click any BM row to filter cases below',function(bmName){
+      amDrillBM=bmName;applyFilters();
+    }));
+  }
+}
+
+/* Build AM summary table for RH/Admin in reminders */
+function buildRemAMTable(scopeData){
+  var amMap={};
+  scopeData.forEach(function(r){
+    var am=r._am||'(Unassigned)';
+    var lbl=am.indexOf('@')>-1?am.split('@')[0]:am;
+    if(!amMap[am])amMap[am]={lbl:lbl,total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+    amMap[am].total++;
+    var ag=r['PDD Ageing (Days)'];
+    if(ag===AGEING_KEYS[0])amMap[am].p120++;
+    else if(ag===AGEING_KEYS[1])amMap[am].p90++;
+    else if(ag===AGEING_KEYS[2])amMap[am].p60++;
+    else if(ag===AGEING_KEYS[3])amMap[am].p45++;
+    else if(ag===AGEING_KEYS[4])amMap[am].p30++;
+    else if(ag==='15 Days Above')amMap[am].p15++;
+    var lid=String(r['Loan ID']||'').trim();
+    var saved=_remarksCache[lid];
+    if(saved&&saved.remark)amMap[am].remDone++;else amMap[am].remPend++;
+  });
+  var ams=Object.keys(amMap).sort(function(a,b){return amMap[b].total-amMap[a].total;});
+  var tot={total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+  var rows='';
+  ams.forEach(function(am){
+    var s=amMap[am];
+    Object.keys(tot).forEach(function(k){tot[k]+=s[k];});
+    var pct=s.total>0?Math.round(s.remDone/s.total*100):0;
+    rows+='<tr>'+
+      '<td class="name-cell">'+esc(s.lbl)+'</td>'+
+      '<td class="center">'+s.total+'</td>'+
+      '<td class="center"><span class="age-pill ap120">'+s.p120+'</span></td>'+
+      '<td class="center"><span class="age-pill ap90">'+s.p90+'</span></td>'+
+      '<td class="center"><span class="age-pill ap60">'+s.p60+'</span></td>'+
+      '<td class="center"><span class="age-pill ap45">'+s.p45+'</span></td>'+
+      '<td class="center"><span class="age-pill ap30">'+s.p30+'</span></td>'+
+      '<td class="center"><span class="age-pill ap15">'+s.p15+'</span></td>'+
+      '<td class="center"><span class="rem-done">'+s.remDone+'</span><span class="rem-pct">'+pct+'%</span></td>'+
+      '<td class="center"><span class="rem-pend">'+s.remPend+'</span></td>'+
+      '</tr>';
+  });
+  var pctTot=tot.total>0?Math.round(tot.remDone/tot.total*100):0;
+  var wrap=document.createElement('div');wrap.className='table-card';
+  wrap.innerHTML='<div class="span-table-wrap"><table class="span-tbl">'+
+    '<thead><tr>'+
+      '<th>AM Name</th><th class="center">Total</th>'+
+      '<th class="center">120D+</th><th class="center">90D+</th><th class="center">60D+</th>'+
+      '<th class="center">45D+</th><th class="center">30D+</th><th class="center">15D+</th>'+
+      '<th class="center">Remarks Done</th><th class="center">Rem Pending</th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '<tfoot><tr>'+
+      '<td><strong>Total</strong></td>'+
+      '<td class="center"><strong>'+tot.total+'</strong></td>'+
+      '<td class="center"><span class="age-pill ap120">'+tot.p120+'</span></td>'+
+      '<td class="center"><span class="age-pill ap90">'+tot.p90+'</span></td>'+
+      '<td class="center"><span class="age-pill ap60">'+tot.p60+'</span></td>'+
+      '<td class="center"><span class="age-pill ap45">'+tot.p45+'</span></td>'+
+      '<td class="center"><span class="age-pill ap30">'+tot.p30+'</span></td>'+
+      '<td class="center"><span class="age-pill ap15">'+tot.p15+'</span></td>'+
+      '<td class="center"><span class="rem-done">'+tot.remDone+'</span><span class="rem-pct">'+pctTot+'%</span></td>'+
+      '<td class="center"><span class="rem-pend">'+tot.remPend+'</span></td>'+
+    '</tr></tfoot>'+
+    '</table></div>';
+  return wrap;
+}
+
+/* Build BM summary table for AM in reminders */
+function buildRemBMTable(data,hint,onClickBM){
   var bmMap={};
-  myData.forEach(function(r){
+  data.forEach(function(r){
     var bm=r._bm||'(Unassigned)';
-    if(!bmMap[bm])bmMap[bm]={lbl:'',p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,total:0,withRem:0,withCommit:0,pendRem:0};
-    bmMap[bm].lbl=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
+    var lbl=bm.indexOf('@')>-1?bm.split('@')[0]:bm;
+    if(!bmMap[bm])bmMap[bm]={lbl:lbl,total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
     bmMap[bm].total++;
     var ag=r['PDD Ageing (Days)'];
     if(ag===AGEING_KEYS[0])bmMap[bm].p120++;
@@ -1772,44 +2015,58 @@ function renderReminderStats(){
     else if(ag==='15 Days Above')bmMap[bm].p15++;
     var lid=String(r['Loan ID']||'').trim();
     var saved=_remarksCache[lid];
-    if(saved&&saved.remark){bmMap[bm].withRem++;if(saved.commitDate)bmMap[bm].withCommit++;}
-    else bmMap[bm].pendRem++;
+    if(saved&&saved.remark)bmMap[bm].remDone++;else bmMap[bm].remPend++;
   });
   var bms=Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;});
-  /* Populate BM filter dropdown */
-  var bmFilterSel=el('bm-stats-filter');
-  if(bmFilterSel){
-    var currentVal=bmFilterSel.value;
-    var opts='<option value="">All BMs ('+bms.length+')</option>';
-    bms.forEach(function(bm){
-      var s=bmMap[bm];
-      var lbl=s.lbl;
-      opts+='<option value="'+esc(bm)+'"'+(currentVal===bm?' selected':'')+'>'+esc(lbl)+' ('+s.total+' cases)</option>';
-    });
-    bmFilterSel.innerHTML=opts;
-  }
-  grid.innerHTML='';
+  var tot={total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+  var rows='';
   bms.forEach(function(bm){
     var s=bmMap[bm];
-    var pct=s.total>0?Math.round(s.withRem/s.total*100):0;
-    var pctCls=pct>=80?'vok':pct>=50?'v60':'vwarn';
-    var card=document.createElement('div');card.className='bm-stats-card';card.setAttribute('data-bm',bm);
-    card.innerHTML=
-      '<div class="bm-stats-title" title="'+esc(bm)+'">'+esc(s.lbl)+'</div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">Total Cases</span><span class="bm-stats-val">'+s.total+'</span></div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">120D+</span><span class="bm-stats-val v120">'+s.p120+'</span></div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">90D+</span><span class="bm-stats-val v90">'+s.p90+'</span></div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">60D+</span><span class="bm-stats-val v60">'+s.p60+'</span></div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">45D+</span><span class="bm-stats-val v45">'+s.p45+'</span></div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">30D+</span><span class="bm-stats-val v30">'+s.p30+'</span></div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">15D+</span><span class="bm-stats-val v15">'+s.p15+'</span></div>'+
-      '<div class="bm-stats-row" style="margin-top:6px;border-top:2px solid var(--border);padding-top:6px">'+
-        '<span class="bm-stats-lbl">Remarks Entered</span><span class="bm-stats-val vok">'+s.withRem+' ('+pct+'%)</span></div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">With Commit Date</span><span class="bm-stats-val">'+s.withCommit+'</span></div>'+
-      '<div class="bm-stats-row"><span class="bm-stats-lbl">Pending Remarks</span><span class="bm-stats-val '+pctCls+'">'+s.pendRem+'</span></div>';
-    grid.appendChild(card);
+    Object.keys(tot).forEach(function(k){tot[k]+=s[k];});
+    var pct=s.total>0?Math.round(s.remDone/s.total*100):0;
+    var pctCls=pct>=80?'rem-done':pct>=50?'':' style="color:var(--orange)"';
+    rows+='<tr style="cursor:pointer" onclick="('+onClickBM.toString()+')(\''+bm.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+
+      '<td class="name-cell">'+esc(s.lbl)+'</td>'+
+      '<td class="center">'+s.total+'</td>'+
+      '<td class="center"><span class="age-pill ap120">'+s.p120+'</span></td>'+
+      '<td class="center"><span class="age-pill ap90">'+s.p90+'</span></td>'+
+      '<td class="center"><span class="age-pill ap60">'+s.p60+'</span></td>'+
+      '<td class="center"><span class="age-pill ap45">'+s.p45+'</span></td>'+
+      '<td class="center"><span class="age-pill ap30">'+s.p30+'</span></td>'+
+      '<td class="center"><span class="age-pill ap15">'+s.p15+'</span></td>'+
+      '<td class="center"><span class="rem-done">'+s.remDone+'</span><span class="rem-pct">'+pct+'%</span></td>'+
+      '<td class="center"><span class="rem-pend">'+s.remPend+'</span></td>'+
+      '<td class="center" style="font-size:10px;color:var(--accent)">Filter Cases &rsaquo;</td>'+
+      '</tr>';
   });
+  var pctTot=tot.total>0?Math.round(tot.remDone/tot.total*100):0;
+  var wrap=document.createElement('div');wrap.className='table-card';
+  wrap.innerHTML='<div class="table-header-row"><div class="table-count">'+esc(hint)+'</div></div>'+
+    '<div class="span-table-wrap"><table class="span-tbl">'+
+    '<thead><tr>'+
+      '<th>BM Name</th><th class="center">Total</th>'+
+      '<th class="center">120D+</th><th class="center">90D+</th><th class="center">60D+</th>'+
+      '<th class="center">45D+</th><th class="center">30D+</th><th class="center">15D+</th>'+
+      '<th class="center">Remarks Done</th><th class="center">Rem Pending</th><th></th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '<tfoot><tr>'+
+      '<td><strong>Total</strong></td>'+
+      '<td class="center"><strong>'+tot.total+'</strong></td>'+
+      '<td class="center"><span class="age-pill ap120">'+tot.p120+'</span></td>'+
+      '<td class="center"><span class="age-pill ap90">'+tot.p90+'</span></td>'+
+      '<td class="center"><span class="age-pill ap60">'+tot.p60+'</span></td>'+
+      '<td class="center"><span class="age-pill ap45">'+tot.p45+'</span></td>'+
+      '<td class="center"><span class="age-pill ap30">'+tot.p30+'</span></td>'+
+      '<td class="center"><span class="age-pill ap15">'+tot.p15+'</span></td>'+
+      '<td class="center"><span class="rem-done">'+tot.remDone+'</span><span class="rem-pct">'+pctTot+'%</span></td>'+
+      '<td class="center"><span class="rem-pend">'+tot.remPend+'</span></td>'+
+      '<td></td>'+
+    '</tr></tfoot>'+
+    '</table></div>';
+  return wrap;
 }
+
 
 function renderReminders(){
   renderReminderStats();
