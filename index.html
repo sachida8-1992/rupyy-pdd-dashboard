@@ -229,9 +229,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 .bm-detail-tbl td{padding:7px 10px;border-bottom:1px solid #edf2f7;font-size:11px;color:var(--text2)}
 .bm-detail-tbl tbody tr:hover td{background:#f0f7ff}
 .pend-summary-outer{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden}
-.pend-summary-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s;border-bottom:1px solid transparent}
-.pend-summary-header:hover{background:var(--surface2)}
-.pend-summary-outer.expanded .pend-summary-header{border-bottom-color:var(--border)}
+.pend-summary-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
 .pend-collapse-icon{font-size:10px;color:var(--text3);transition:transform .2s;display:inline-block}
 .pend-collapse-icon.open{transform:rotate(90deg)}
 .pend-chips-row{display:flex;gap:6px;flex-wrap:wrap}
@@ -419,14 +417,15 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     <div id="section-cases">
       <div class="charts-row">
         <div class="pend-summary-outer">
-          <div class="pend-summary-header" onclick="togglePendSummary()">
+          <div class="pend-summary-header" style="cursor:default">
             <div style="display:flex;align-items:center;gap:10px">
-              <span class="pend-collapse-icon" id="pend-collapse-icon">&#9654;</span>
               <span class="chart-title" style="margin:0">Pendency &amp; Ageing Summary — Cases &amp; Disbursed Amount</span>
+              <span id="pend-count-chip" style="font-size:10px;color:var(--text3);font-family:var(--mono)"></span>
             </div>
-            <span style="font-size:11px;color:var(--text3)" id="pend-toggle-hint">Click to expand</span>
+            <span style="font-size:11px;color:var(--text3)">Top 5 shown</span>
           </div>
-          <div id="pend-summary-body" style="display:none;overflow-x:auto">
+          <!-- Top 5 preview — always visible -->
+          <div id="pend-preview-section" style="overflow-x:auto">
             <table class="pend-age-tbl" id="pend-age-tbl">
               <thead>
                 <tr>
@@ -439,8 +438,18 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
                 </tr>
               </thead>
               <tbody id="pend-age-body"></tbody>
-              <tfoot id="pend-age-foot"></tfoot>
+              <tfoot id="pend-age-foot" style="display:none"></tfoot>
             </table>
+            <!-- Show All rows (hidden by default) -->
+            <table class="pend-age-tbl" id="pend-age-tbl-all" style="display:none;border-top:none">
+              <tbody id="pend-age-body-all"></tbody>
+              <tfoot id="pend-age-foot-all"></tfoot>
+            </table>
+            <div id="pend-show-all-row" style="text-align:center;padding:8px 0;display:none">
+              <button class="reset-btn" id="pend-show-all-btn" onclick="togglePendAll()" style="font-size:11px;padding:5px 14px">
+                &#8964; View All Pendency Types
+              </button>
+            </div>
           </div>
         </div>
         <div class="top-channels-card">
@@ -1182,32 +1191,35 @@ function renderCasesCharts(data){
   if(!chs.length)tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text3)">No data</td></tr>';
 }
 
-function togglePendSummary(){
-  var body=el('pend-summary-body');
-  var icon=el('pend-collapse-icon');
-  var hint=el('pend-toggle-hint');
-  if(!body)return;
-  var isOpen=body.style.display!=='none';
-  body.style.display=isOpen?'none':'block';
-  if(icon)icon.className='pend-collapse-icon'+(isOpen?'':' open');
-  if(hint)hint.textContent=isOpen?'Click to expand':'Click to collapse';
+function togglePendAll(){
+  var allTbl=el('pend-age-tbl-all');
+  var foot  =el('pend-age-foot');
+  var btn   =el('pend-show-all-btn');
+  if(!allTbl)return;
+  var isOpen=allTbl.style.display!=='none';
+  allTbl.style.display=isOpen?'none':'table';
+  if(foot)foot.style.display=isOpen?'none':'table-row-group';
+  if(btn)btn.innerHTML=isOpen?'&#8964; View All Pendency Types':'&#8963; Show Top 5 Only';
 }
 
 function renderPendAgeTable(data){
-  var tbody=el('pend-age-body');var tfoot=el('pend-age-foot');
+  var tbody    = el('pend-age-body');
+  var tbodyAll = el('pend-age-body-all');
+  var tfoot    = el('pend-age-foot');
+  var tfootAll = el('pend-age-foot-all');
+  var showAllRow = el('pend-show-all-row');
+  var countChip  = el('pend-count-chip');
   if(!tbody)return;
 
-  /* Only show actually pending cases (exclude No pending) */
   var AGES=['120 Days Above','90 Days Above','60 Days Above','45 Days Above'];
-  var AGE_LBLS={'120 Days Above':'120D+','90 Days Above':'90D+','60 Days Above':'60D+','45 Days Above':'45D+'};
 
-  /* Build map: pendency -> { per ageing: {count, amt} } — skip No pending */
+  /* Build pendency map — exclude No pending, only 120+/90+/60+/45+ */
   var pMap={};
   data.forEach(function(r){
     var p=r._pendency||'Unknown';
-    if(!p||p==='No pending')return;          /* skip resolved */
+    if(!p||p==='No pending')return;
     var ag=r['PDD Ageing (Days)'];
-    if(AGES.indexOf(ag)===-1)return;          /* only 120+/90+/60+/45+ */
+    if(AGES.indexOf(ag)===-1)return;
     var amt=r._amt||0;
     if(!pMap[p])pMap[p]={};
     if(!pMap[p][ag])pMap[p][ag]={cnt:0,amt:0};
@@ -1232,8 +1244,7 @@ function renderPendAgeTable(data){
       '</div></td>';
   }
 
-  var rows='';
-  pKeys.forEach(function(p){
+  function buildRow(p){
     var rowTotal={cnt:0,amt:0};
     var cells='';
     AGES.forEach(function(ag){
@@ -1243,35 +1254,59 @@ function renderPendAgeTable(data){
         totals[ag].cnt+=obj.cnt;totals[ag].amt+=obj.amt;
         totTotal.cnt+=obj.cnt;totTotal.amt+=obj.amt;}
     });
-    var pCls=getPCls(p);
-    rows+='<tr>'+
-      '<td><span class="pendency-tag '+pCls+'" style="font-size:11px">'+esc(p)+'</span></td>'+
+    return '<tr>'+
+      '<td><span class="pendency-tag '+getPCls(p)+'" style="font-size:11px">'+esc(p)+'</span></td>'+
       cells+
       '<td><div class="pend-age-cell">'+
         '<span class="pend-age-count" style="color:var(--accent)">'+rowTotal.cnt+'</span>'+
         '<span class="pend-age-amt">'+fmtAmt(rowTotal.amt)+'</span>'+
       '</div></td>'+
       '</tr>';
-  });
-
-  if(!pKeys.length){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">No pending cases in 120D+/90D+/60D+/45D+</td></tr>';
-    tfoot.innerHTML='';return;
   }
 
-  tbody.innerHTML=rows;
+  if(!pKeys.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--text3)">No pending cases in 120D+/90D+/60D+/45D+</td></tr>';
+    if(tbodyAll)tbodyAll.innerHTML='';
+    if(tfoot)tfoot.style.display='none';
+    if(showAllRow)showAllRow.style.display='none';
+    return;
+  }
 
-  /* Footer totals row */
-  var footCells='';
-  AGES.forEach(function(ag){footCells+=mkCell(totals[ag].cnt?totals[ag]:null);});
-  tfoot.innerHTML='<tr>'+
+  /* Top 5 in main tbody */
+  var top5=pKeys.slice(0,5);
+  var rest=pKeys.slice(5);
+
+  /* Reset totals before building rows */
+  AGES.forEach(function(ag){totals[ag]={cnt:0,amt:0};});
+  totTotal={cnt:0,amt:0};
+
+  tbody.innerHTML=top5.map(buildRow).join('');
+
+  /* Remaining rows in hidden all-table tbody */
+  if(tbodyAll)tbodyAll.innerHTML=rest.map(buildRow).join('');
+
+  /* Footer totals (shown when all expanded) */
+  var footHtml='<tr>'+
     '<td><strong>Total Pending</strong></td>'+
-    footCells+
+    AGES.map(function(ag){return mkCell(totals[ag].cnt?totals[ag]:null);}).join('')+
     '<td><div class="pend-age-cell">'+
       '<span class="pend-age-count" style="color:var(--accent)"><strong>'+totTotal.cnt+'</strong></span>'+
       '<span class="pend-age-amt">'+fmtAmt(totTotal.amt)+'</span>'+
     '</div></td>'+
     '</tr>';
+  if(tfoot)tfoot.innerHTML=footHtml;
+  if(tfootAll)tfootAll.innerHTML=footHtml;
+
+  /* Show/hide "View All" button */
+  if(showAllRow)showAllRow.style.display=rest.length>0?'block':'none';
+  if(countChip)countChip.textContent='('+pKeys.length+' types)';
+
+  /* Reset "View All" button state */
+  var btn=el('pend-show-all-btn');
+  var allTbl=el('pend-age-tbl-all');
+  if(btn)btn.innerHTML='&#8964; View All Pendency Types';
+  if(allTbl)allTbl.style.display='none';
+  if(tfoot)tfoot.style.display='none';
 }
 
 
