@@ -357,8 +357,8 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
       <option value="">-- Select name / role --</option>
     </select>
     <label class="login-label">Password</label>
-    <input class="login-input" id="pwd-input" type="password" placeholder="Enter password" autocomplete="off">
-    <div class="login-hint" id="pwd-hint"></div>
+    <input class="login-input" id="pwd-input" type="password" placeholder="Enter employee code" autocomplete="off">
+    <div class="login-hint" id="pwd-hint" style="display:none"></div>
     <br><br>
     <button class="login-btn" onclick="doLogin()">Sign In &rarr;</button>
   </div>
@@ -664,7 +664,20 @@ function getACls(a){return {'120 Days Above':'a120','90 Days Above':'a90','60 Da
 function getRCls(a){return {'120 Days Above':'row-120','90 Days Above':'row-90','60 Days Above':'row-60','45 Days Above':'row-45','30 Days Above':'row-30'}[a]||'';}
 function getSCls(a){return {'120 Days Above':'seg-120','90 Days Above':'seg-90','60 Days Above':'seg-60','45 Days Above':'seg-45','30 Days Above':'seg-30','15 Days Above':'seg-15'}[a]||'';}
 function getPrio(r){var s=r._age;if(r._pendency&&r._pendency!=='No pending')s+=50;if(r._pendency==='Legal'||r._pendency==='To be Cancelled')s+=30;return s>250?'p-critical':s>150?'p-high':s>80?'p-medium':'p-low';}
-function getUserPwd(u){var l=u.indexOf('@')>-1?u.split('@')[0]:u;l=l.replace(/[._]/g,'');return l.substring(0,4).toLowerCase();}
+/* Employee code map — password = emp code */
+var EMP_CODES={"raju patra": "10067906", "lucky gulati": "10070814", "dhruba jyoti parasar": "10070890", "akramuz zaman": "10059044", "prasanta konwar": "10059046", "rosan kumar sahoo": "10059066", "p kanteswar swamy": "10063894", "seraj ahmed": "10071597", "iftikar hussain": "10071618", "nitish kumar dash": "10071629", "sabir husain hazarika": "10071818", "pawan yadav": "10071856", "shivraj paul": "10072053", "aman kumar": "10072848", "mukesh kumar ojha": "10072916", "abhijit dey": "10072786", "swadhin jena": "10072789", "md aminul haque": "10072811", "sanjib kumar nag": "10072976", "jiyareja akhtar": "10073093", "dipankar choudhury": "10073191", "shantanu ghosh": "10073355", "yogender shukla": "10073521", "anish khan": "10073614", "adityanarayan sahoo": "10073663", "binay kumar sharma": "10074186", "sidhartha verma": "10074327", "suswagata biswas": "10074329", "kunal kumar": "10074393", "josef dey": "10074441", "jawed hussain ansari": "10074456", "gourav ojha": "10074501", "md aquib hussain": "10074679", "sarada prasanna nayak": "10074687", "sachidananda panigrahy": "1986"};
+function getUserPwd(u){
+  /* Try matching by display name (lowercase) */
+  var name=u.indexOf('@')>-1?u.split('@')[0]:u;
+  /* normalise: replace dots/underscores with space, lowercase */
+  var nameNorm=name.replace(/[._]/g,' ').trim().toLowerCase();
+  if(EMP_CODES[nameNorm])return String(EMP_CODES[nameNorm]);
+  /* Try full u as name (for RH/BM stored as plain name) */
+  var uLow=u.trim().toLowerCase();
+  if(EMP_CODES[uLow])return String(EMP_CODES[uLow]);
+  /* fallback: first 4 chars (legacy) */
+  return nameNorm.replace(/\s/g,'').substring(0,4);
+}
 function el(id){return document.getElementById(id);}
 function countAge(data,key){return data.filter(function(r){return r['PDD Ageing (Days)']==key;}).length;}
 function sumAmt(data){return data.reduce(function(t,r){return t+r._amt;},0);}
@@ -681,7 +694,7 @@ function updateRoleBadge(){
   var val=el('role-select').value;var h=el('pwd-hint');
   if(!val){h.textContent='';return;}
   var role=val.split('|')[0];
-  h.textContent=role==='admin'?'Enter admin password':'Password: first 4 letters of your name (lowercase)';
+  h.textContent='';
   el('login-error').style.display='none';
 }
 function doLogin(){
@@ -690,7 +703,7 @@ function doLogin(){
   if(!val){errEl.textContent='Please select your name first.';errEl.style.display='block';return;}
   var parts=val.split('|');var role=parts[0];var user=parts.slice(1).join('|');
   if(role==='admin'){if(pwd!==ADMIN_PASS){errEl.textContent='Incorrect admin password.';errEl.style.display='block';return;}}
-  else{if(pwd!==getUserPwd(user)){errEl.textContent='Incorrect password. Hint: first 4 letters of your name, lowercase.';errEl.style.display='block';return;}}
+  else{if(pwd!==getUserPwd(user)){errEl.textContent='Incorrect password. Please enter your employee code.';errEl.style.display='block';return;}}
   currentRole=role;currentUser=user;
   drillAM=null;drillBM=null;amDrillBM=null;activeAgeings=[];activePill='All';
   el('pwd-input').value='';
