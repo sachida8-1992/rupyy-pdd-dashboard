@@ -1664,63 +1664,55 @@ function fetchRemarksAndRender(callback){
 /* ── SAVE REMARK TO SHEET ── */
 function pushRemarkToSheet(loanId,data,btnEl){
   if(btnEl){btnEl.textContent='Syncing\u2026';btnEl.className='bm-save-btn syncing';}
-  /* Use GET with URL params - avoids ALL CORS preflight issues with Apps Script */
-  function enc(v){return encodeURIComponent(String(v||''));}
-  var url=GAS_URL+'?action=save_remark'+
-    '&loanId='+enc(loanId)+
-    '&remark='+enc(data.remark)+
-    '&commitDate='+enc(data.commitDate)+
-    '&status='+enc(data.status)+
-    '&bmUser='+enc(data.bmUser)+
-    '&bmDisplay='+enc(data.bmDisplay)+
-    '&customerName='+enc(data.customerName)+
-    '&dealerName='+enc(data.dealerName)+
-    '&pddAgeing='+enc(data.pddAgeing)+
-    '&pendency='+enc(data.pendency);
+  /* POST with text/plain avoids CORS preflight; Apps Script doPost handles it */
+  var payload=JSON.stringify({
+    type:'save_remark',
+    loanId:loanId,
+    remark:data.remark,
+    commitDate:data.commitDate,
+    status:data.status,
+    bmUser:data.bmUser,
+    bmDisplay:data.bmDisplay,
+    customerName:data.customerName,
+    dealerName:data.dealerName,
+    pddAgeing:data.pddAgeing,
+    pendency:data.pendency
+  });
+  console.log('[PDD] POST save_remark | loanId='+loanId+' | remark='+data.remark.substring(0,30));
   var xhr=new XMLHttpRequest();
-  xhr.open('GET',url,true);
+  xhr.open('POST',GAS_URL,true);
+  xhr.setRequestHeader('Content-Type','text/plain');
   xhr.onload=function(){
-    /* Find the button - it may have been re-created by renderTable, look it up by data attr */
-    var activeBtn=btnEl;
-    if(btnEl&&btnEl.getAttribute('data-saving-lid')){
-      var lid2=btnEl.getAttribute('data-saving-lid');
-      var found=document.querySelector('[data-saving-lid="'+lid2+'"]');
-      if(found)activeBtn=found;
-    }
+    console.log('[PDD] GAS response status:'+xhr.status+' body:'+xhr.responseText.substring(0,200));
     var isOk=false;
     try{
       var resp=JSON.parse(xhr.responseText);
       isOk=(resp.status==='ok');
     }catch(e){
-      /* Apps Script cold start returns HTML - data was still saved */
-      isOk=true;
+      isOk=true; /* Apps Script cold start returns HTML — data was still saved */
     }
-    if(activeBtn){
+    if(btnEl){
       if(isOk){
-        /* Update button state immediately */
-        activeBtn.textContent='Saved \u2713';activeBtn.className='bm-save-btn saved';
-        activeBtn.removeAttribute('data-saving-lid');
-        /* Re-render table — for BM this refreshes the saved-remark preview panel */
-        if(currentTab==='cases'){
-          renderTable();
-          /* After renderTable the old activeBtn is gone; find the new button to reset text */
-          setTimeout(function(){
-            var newBtn=document.querySelector('.bm-save-btn.saved');
-            if(newBtn){newBtn.textContent='Save & Sync';newBtn.className='bm-save-btn';}
-          },2500);
-        }
-        if(currentTab==='reminders')renderReminders();
-        /* Re-fetch from sheet after 2s so AM/RH get fresh data */
-        setTimeout(function(){fetchAndCacheRemarks();},2000);
-      } else {
-        activeBtn.textContent='Error! Retry';activeBtn.className='bm-save-btn';
-        activeBtn.removeAttribute('data-saving-lid');
-      }
-      /* Button reset for non-cases tabs (reminders etc) */
-      if(currentTab!=='cases'){
+        btnEl.textContent='Saved \u2713';btnEl.className='bm-save-btn saved';
+        /* Re-render after short delay so user sees the tick first */
         setTimeout(function(){
-          if(activeBtn){activeBtn.textContent='Save & Sync';activeBtn.className='bm-save-btn';}
+          if(currentTab==='cases')renderTable();
+          if(currentTab==='reminders')renderReminders();
+          /* Re-fetch so AM/RH get updated data */
+          fetchAndCacheRemarks();
+        },800);
+        /* Reset button text after re-render */
+        setTimeout(function(){
+          /* Find button again after re-render by iterating all save buttons */
+          var btns=document.querySelectorAll('.bm-save-btn');
+          btns.forEach(function(b){if(b.textContent==='Save & Sync'||b.className==='bm-save-btn saved'){}});
+          if(btnEl&&document.body.contains(btnEl)){
+            btnEl.textContent='Save & Sync';btnEl.className='bm-save-btn';
+          }
         },2500);
+      } else {
+        btnEl.textContent='Error! Retry';btnEl.className='bm-save-btn';
+        console.warn('Sheet sync error for loan:',loanId);
       }
     }
   };
@@ -1735,16 +1727,19 @@ function pushRemarkToSheet(loanId,data,btnEl){
 function logLogin(action){
   if(!currentUser||!currentRole)return;
   var dn=el('hdr-name')?el('hdr-name').textContent:currentUser;
-  function enc(v){return encodeURIComponent(String(v||''));}
-  var url=GAS_URL+'?action=log_login'+
-    '&user='+enc(currentUser)+
-    '&role='+enc(currentRole)+
-    '&displayName='+enc(dn)+
-    '&loginAction='+enc(action)+
-    '&sessionId='+enc('s'+Date.now());
+  var payload=JSON.stringify({
+    type:'login',
+    user:currentUser,
+    role:currentRole,
+    displayName:dn,
+    loginAction:action,
+    action:action,
+    sessionId:'s'+Date.now()
+  });
   var xhr=new XMLHttpRequest();
-  xhr.open('GET',url,true);
-  xhr.send();
+  xhr.open('POST',GAS_URL,true);
+  xhr.setRequestHeader('Content-Type','text/plain');
+  xhr.send(payload);
 }
 
 /* ── GENERATE BM REMARK CELL (inline in case table) ── */
@@ -1830,9 +1825,11 @@ function getBMRemarkCell(loanId,idx,r){
 
 function saveBMRemark(btnEl){
   var idx=btnEl.getAttribute('data-rowidx');
-  /* Read loan data from parent td's data attributes */
-  var td=btnEl.parentElement;
+  /* Walk up DOM to find the <td> with data-lid (button is nested inside divs) */
+  var td=btnEl.closest?btnEl.closest('[data-lid]'):null;
+  if(!td){var el2=btnEl;while(el2&&!el2.getAttribute('data-lid'))el2=el2.parentElement;td=el2;}
   var loanId    =td?td.getAttribute('data-lid'):'';
+  console.log('[PDD] saveBMRemark called | idx='+idx+' | loanId='+loanId+' | td='+!!td);
   var custName  =td?td.getAttribute('data-cust'):'';
   var dealerName=td?td.getAttribute('data-dealer'):'';
   var pddAge    =td?td.getAttribute('data-age'):'';
