@@ -1834,7 +1834,15 @@ function saveBMRemark(btnEl){
   var dealerName=td?td.getAttribute('data-dealer'):'';
   var pddAge    =td?td.getAttribute('data-age'):'';
   var pendency  =td?td.getAttribute('data-pend'):'';
-  var remark    =el('bri-'+idx)?el('bri-'+idx).value.trim():'';
+  /* Sanitise remark — strip control chars, normalise quotes, trim whitespace */
+  var rawRemark =el('bri-'+idx)?el('bri-'+idx).value:'';
+  var remark    =rawRemark
+    .replace(/[\u0000-\u001F\u007F]/g,' ')  /* strip control chars */
+    .replace(/[\u2018\u2019]/g,"'")           /* curly single quotes → straight */
+    .replace(/[\u201C\u201D]/g,'"')           /* curly double quotes → straight */
+    .replace(/&/g,'and')                       /* & → and (safe for JSON + sheet) */
+    .replace(/</g,'(').replace(/>/g,')')       /* < > → brackets */
+    .trim();
   var rawDate   =el('brd-'+idx)?el('brd-'+idx).value:'';
   var commitDate=rawDate?normaliseDate(rawDate):''; /* Always store as YYYY-MM-DD */
   var status    =el('brs-'+idx)?el('brs-'+idx).value:'Open';
