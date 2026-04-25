@@ -472,7 +472,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
         <button class="reset-btn" onclick="resetFilters()">Reset</button>
         <button class="export-btn" onclick="exportCSV()">&#8595; CSV</button>
       </div>
-      <div class="pills-row" id="pills-row"></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div class="pills-row" id="pills-row" style="margin-bottom:0;flex:1"></div><span id="pills-count" style="font-size:11px;color:var(--accent);font-weight:600;white-space:nowrap"></span></div>
       <div class="table-card">
         <div class="table-header-row"><div class="table-count" id="table-count">Showing 0 cases</div></div>
         <div class="table-wrap">
@@ -647,7 +647,7 @@ var ADMIN_PASS='1986';
 var currentUser=null,currentRole=null;
 var drillAM=null,drillBM=null,amDrillBM=null;
 var filteredData=[],sortCol='RC Age (Days)',sortAsc=false;
-var activePill='All',activeAgeings=[];
+var activePills=[],activeAgeings=[];  /* activePills: array of selected pendency types; empty = All */
 var donutChart=null,bankPieChart=null;
 var currentTab='cases';
 
@@ -702,7 +702,7 @@ function doLogin(){
   if(role==='admin'){if(pwd!==ADMIN_PASS){errEl.textContent='Incorrect admin password.';errEl.style.display='block';return;}}
   else{if(pwd!==getUserPwd(user)){errEl.textContent='Incorrect password. Please enter your employee code.';errEl.style.display='block';return;}}
   currentRole=role;currentUser=user;
-  drillAM=null;drillBM=null;amDrillBM=null;activeAgeings=[];activePill='All';
+  drillAM=null;drillBM=null;amDrillBM=null;activeAgeings=[];activePills=[];
   el('pwd-input').value='';
   el('login-screen').style.display='none';el('dashboard').style.display='block';
   var initials=user.replace('@rupyy.com','').replace(/[._]/g,' ').trim().split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
@@ -717,7 +717,7 @@ function doLogin(){
   refreshAll();
 }
 function doLogout(){
-  currentUser=null;currentRole=null;drillAM=null;drillBM=null;amDrillBM=null;activeAgeings=[];activePill='All';
+  currentUser=null;currentRole=null;drillAM=null;drillBM=null;amDrillBM=null;activeAgeings=[];activePills=[];
   el('dashboard').style.display='none';el('login-screen').style.display='flex';
   el('role-select').value='';el('pwd-input').value='';el('pwd-hint').textContent='';el('login-error').style.display='none';
   if(donutChart){donutChart.destroy();donutChart=null;}
@@ -1072,11 +1072,28 @@ function buildAMAgeing(){
 }
 function buildPills(){
   var row=el('pills-row');if(!row)return;row.innerHTML='';
-  PENDENCY_PILLS.forEach(function(p){
-    var b=document.createElement('button');b.className='pill'+(p===activePill?' active':'');b.textContent=p;
-    (function(pill,btn){btn.onclick=function(){activePill=pill;buildPills();applyFilters();};})(p,b);
+  /* "All" clear button */
+  var allBtn=document.createElement('button');
+  allBtn.className='pill'+(activePills.length===0?' active':'');
+  allBtn.textContent='All';
+  allBtn.onclick=function(){activePills=[];buildPills();applyFilters();};
+  row.appendChild(allBtn);
+  /* Individual pendency pills — click toggles selection */
+  PENDENCY_PILLS.filter(function(p){return p!=='All';}).forEach(function(p){
+    var isActive=activePills.indexOf(p)>-1;
+    var b=document.createElement('button');
+    b.className='pill'+(isActive?' active':'');
+    b.textContent=p;
+    (function(pill,btn){btn.onclick=function(){
+      var i=activePills.indexOf(pill);
+      if(i>-1)activePills.splice(i,1);else activePills.push(pill);
+      buildPills();applyFilters();
+    };})(p,b);
     row.appendChild(b);
   });
+  /* Show selected count label */
+  var countEl=el('pills-count');
+  if(countEl)countEl.textContent=activePills.length>1?activePills.length+' selected':'';
 }
 function buildStateFilter(){
   var st=[];var seen={};
@@ -1140,7 +1157,7 @@ function applyFilters(){
   if(bkF)base=base.filter(function(r){return (r._bank||'').toLowerCase().indexOf(bkF)>-1;});
   if(prF)base=base.filter(function(r){return (r['product_type']||'').toLowerCase().indexOf(prF)>-1;});
   if(activeAgeings.length)base=base.filter(function(r){return activeAgeings.indexOf(r['PDD Ageing (Days)'])>-1;});
-  if(activePill&&activePill!=='All')base=base.filter(function(r){return r._pendency===activePill;});
+  if(activePills.length>0)base=base.filter(function(r){return activePills.indexOf(r._pendency)>-1;});
   filteredData=base;sortData();
   renderKPIs(base);renderAgeingBar(base);renderCasesCharts(base);renderTable();
   if(currentTab==='bank'){renderBankCharts(base);renderBankTable();}
@@ -1148,7 +1165,7 @@ function applyFilters(){
 function resetFilters(){
   ['search-box','bank-search-filter','product-search-filter'].forEach(function(id){var e=el(id);if(e)e.value='';});
   var sf=el('state-filter');if(sf)sf.value='';
-  activePill='All';activeAgeings=[];
+  activePills=[];activeAgeings=[];
   buildPills();buildAMAgeing();
   if(currentRole==='bm')buildBMAgeing(getMyData());
   applyFilters();
@@ -1510,7 +1527,7 @@ function handleUploadFile(file){
       mergeRemarksFromCSV(newData);
       /* Reset ALL drill/filter state so fresh data renders cleanly */
       drillAM=null;drillBM=null;amDrillBM=null;
-      activeAgeings=[];activePill='All';
+      activeAgeings=[];activePills=[];
       /* Rebuild derived lists from new data */
       rebuildUserLists();
       /* Rebuild all UI that depends on data shape */
