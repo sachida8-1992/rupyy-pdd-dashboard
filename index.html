@@ -1720,7 +1720,7 @@ function pushRemarkToSheet(loanId,data,btnEl){
     if(btnEl){btnEl.textContent='Network Error';btnEl.className='bm-save-btn';}
     console.warn('Sync network error for loan:',loanId);
   };
-  xhr.send();
+  xhr.send(payload); /* send JSON body */
 }
 
 /* ── LOG LOGIN ── */
