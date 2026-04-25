@@ -357,10 +357,10 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
       <option value="">-- Select name / role --</option>
     </select>
     <label class="login-label">Password</label>
-    <input class="login-input" id="pwd-input" type="password" placeholder="Enter employee code" autocomplete="off">
-    <div class="login-hint" id="pwd-hint" style="display:none"></div>
+    <input class="login-input" id="pwd-input" type="password" placeholder="" autocomplete="off">
+    <div id="pwd-hint" style="display:none"></div>
     <br><br>
-    <button class="login-btn" onclick="doLogin()">Sign In &rarr;</button>
+    <button class="login-btn" onclick="doLogin()">Access Dashboard &rarr;</button>
   </div>
 </div>
 
@@ -691,10 +691,7 @@ function initLogin(){
   BMS.forEach(function(bm){var o=document.createElement('option');o.value='bm|'+bm;var lbl=bm.indexOf('@')>-1?bm.split('@')[0]:bm;o.textContent='BM: '+lbl;rs.appendChild(o);});
 }
 function updateRoleBadge(){
-  var val=el('role-select').value;var h=el('pwd-hint');
-  if(!val){h.textContent='';return;}
-  var role=val.split('|')[0];
-  h.textContent='';
+  var val=el('role-select').value;
   el('login-error').style.display='none';
 }
 function doLogin(){
