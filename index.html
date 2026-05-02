@@ -1765,7 +1765,8 @@ function closeMailModal(){
 
 function sendBMEmails(){
   var grps = window._mailBMGroups;
-  if(!grps || !Object.keys(grps).length){ alert('No data to send.'); return; }
+  console.log('[MAIL] grps:', grps ? Object.keys(grps).length+' BMs' : 'undefined');
+  if(!grps || !Object.keys(grps).length){ alert('No data to send. Click Preview Cases first.'); return; }
   var btn = el('mail-send-btn');
   var msg = el('mail-status-msg');
   if(btn){ btn.textContent='Sending\u2026'; btn.disabled=true; btn.style.background='#c05621'; }
@@ -1791,6 +1792,8 @@ function sendBMEmails(){
     };
   });
 
+  console.log('[MAIL] bmList length:', bmList.length);
+  console.log('[MAIL] bmList:', bmList.length, 'BMs to email');
   var totalBMs = bmList.length;
   var bmIdx    = 0;
 
@@ -1811,6 +1814,7 @@ function sendBMEmails(){
       bms:[entry]
     });
     var getUrl = GAS_URL+'?action=send_bm_emails&batchData='+encodeURIComponent(payload);
+    console.log('[MAIL] Sending to GAS:', getUrl.substring(0, 150));
     var xhr = new XMLHttpRequest();
     xhr.open('GET', getUrl, true);
     xhr.onload = function(){
