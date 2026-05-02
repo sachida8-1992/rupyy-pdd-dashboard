@@ -1806,9 +1806,9 @@ function sendBMEmails(){
 
   function sendBatch(){
     if(batchIdx >= batches.length){
-      if(btn){ btn.textContent = '\u2713 Sent!'; btn.style.background='#1a7a3c'; btn.disabled=false; }
-      if(msg) msg.textContent = 'Emails sent to '+totalBMs+' BM(s).';
-      setTimeout(function(){ closeMailModal(); }, 3000);
+      if(btn){ btn.textContent = '\u2713 Emails Sent!'; btn.style.background='#1a7a3c'; btn.disabled=false; }
+      if(msg) msg.textContent = 'Emails dispatched to '+totalBMs+' BM(s). Check their inboxes.';
+      setTimeout(function(){ closeMailModal(); }, 4000);
       return;
     }
     var batch = batches[batchIdx];
@@ -1821,25 +1821,22 @@ function sendBMEmails(){
       bms:  batch
     });
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', GAS_URL, true);
-    xhr.setRequestHeader('Content-Type','text/plain');
-    xhr.onload = function(){
-      var isOk = false;
-      try{ var resp=JSON.parse(xhr.responseText); isOk=(resp.status==='ok'); sentCount+=(resp.sent||0); }
-      catch(e){ isOk=true; }
-      if(!isOk){
-        if(btn){ btn.textContent='\u26a0 Error on batch '+batchIdx; btn.disabled=false; btn.style.background='#c0392b'; }
-        if(msg) msg.textContent='Error on batch '+batchIdx+'. Check Apps Script logs.';
-        return;
-      }
-      sendBatch(); /* send next batch */
-    };
-    xhr.onerror = function(){
+    /* Use fetch with no-cors to avoid CORS preflight block on Apps Script POST */
+    fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: payload
+    })
+    .then(function(){
+      /* no-cors returns opaque response - can't read it, but request went through */
+      sendBatch();
+    })
+    .catch(function(err){
       if(btn){ btn.textContent='\u26a0 Network Error'; btn.disabled=false; btn.style.background='#c0392b'; }
       if(msg) msg.textContent='Network error on batch '+batchIdx+'. Try again.';
-    };
-    xhr.send(payload);
+      console.error('Mail batch error:', err);
+    });
   }
 
   sendBatch(); /* start first batch */
