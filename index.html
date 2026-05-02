@@ -275,13 +275,6 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 .rem-sum-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;box-shadow:var(--shadow-sm)}
 .rem-sum-val{font-family:var(--mono);font-size:28px;font-weight:700;margin-bottom:4px}
 .rem-sum-lbl{font-size:11px;color:var(--text2)}
-.mail-preview-tbl{width:100%;border-collapse:collapse;font-size:12px}
-.mail-preview-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);background:var(--surface2);text-align:left}
-.mail-preview-tbl td{padding:7px 10px;border-bottom:1px solid #edf2f7;font-size:12px;color:var(--text2)}
-.mail-preview-tbl tbody tr:hover td{background:#f0f7ff}
-.mail-bm-group{margin-bottom:14px}
-.mail-bm-group-hdr{font-size:12px;font-weight:700;color:var(--accent);padding:6px 10px;background:var(--surface2);border-radius:4px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
-.mail-bm-group-hdr .bm-case-count{font-family:var(--mono);font-size:11px;color:var(--text2)}
 .bm-remark-input{width:100%;padding:4px 7px;border:1px solid var(--border2);border-radius:4px;font-family:var(--sans);font-size:11px;color:var(--text);background:#fff;outline:none;resize:vertical;min-height:36px;transition:border-color .2s}
 .bm-remark-input:focus{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(26,92,180,.08)}
 .bm-remark-input:disabled{background:var(--surface2);color:var(--text2);cursor:default}
@@ -380,7 +373,6 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     </div>
     <div class="header-right">
       <button class="upload-link-btn" id="upload-link-btn" onclick="openUpload()" style="display:none">&#8679; Upload Data</button>
-      <button class="upload-link-btn" id="mail-bm-btn" onclick="openMailModal()" style="display:none;background:#1a7a3c">&#9993; Mail BMs</button>
       <div class="user-chip">
         <div class="user-avatar" id="hdr-avatar">A</div>
         <div class="user-name" id="hdr-name">User</div>
@@ -597,58 +589,6 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
   </div>
 </div>
 
-<!-- MAIL BM MODAL -->
-<div class="modal-overlay" id="mail-modal" onclick="if(event.target===this)closeMailModal()">
-  <div class="modal-box" style="max-width:680px">
-    <button class="modal-close" onclick="closeMailModal()">&#10005; Close</button>
-    <div class="modal-title">&#9993; Send Pendency Reminder to BMs</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">
-      <strong>To:</strong> BM &nbsp;|&nbsp; <strong>CC:</strong> AM &amp; RH &nbsp;|&nbsp; Each BM receives only their own cases.
-    </p>
-
-    <!-- Filters row -->
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.7px;text-transform:uppercase;margin-bottom:10px">Filter Cases to Include</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <!-- BM multi-select -->
-        <div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600">Select BMs</div>
-          <div id="mail-bm-checkboxes" style="max-height:140px;overflow-y:auto;background:#fff;border:1px solid var(--border);border-radius:4px;padding:6px"></div>
-          <div style="margin-top:5px;display:flex;gap:6px">
-            <button class="reset-btn" style="font-size:10px;padding:3px 8px" onclick="mailSelectAllBMs(true)">All</button>
-            <button class="reset-btn" style="font-size:10px;padding:3px 8px" onclick="mailSelectAllBMs(false)">None</button>
-          </div>
-        </div>
-        <!-- Ageing multi-select -->
-        <div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600">Select Ageing Buckets</div>
-          <div id="mail-age-checkboxes" style="background:#fff;border:1px solid var(--border);border-radius:4px;padding:6px"></div>
-          <div style="margin-top:5px;display:flex;gap:6px">
-            <button class="reset-btn" style="font-size:10px;padding:3px 8px" onclick="mailSelectAllAges(true)">All</button>
-            <button class="reset-btn" style="font-size:10px;padding:3px 8px" onclick="mailSelectAllAges(false)">None</button>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top:10px">
-        <button class="export-btn" onclick="buildMailPreview()" style="font-size:12px;padding:7px 16px">&#128269; Preview Cases</button>
-        <span id="mail-filter-summary" style="font-size:11px;color:var(--text2);margin-left:10px"></span>
-      </div>
-    </div>
-
-    <!-- Preview -->
-    <div id="mail-preview-section">
-      <div class="section-label" style="margin-bottom:8px">Preview — Cases to be Sent</div>
-      <div id="mail-preview-content" style="max-height:220px;overflow-y:auto"></div>
-    </div>
-
-    <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;align-items:center">
-      <span id="mail-status-msg" style="font-size:12px;color:var(--text2)"></span>
-      <button class="reset-btn" onclick="closeMailModal()">Cancel</button>
-      <button class="export-btn" id="mail-send-btn" onclick="sendBMEmails()" style="background:#1a7a3c">&#9993; Send Emails</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="remark-modal" onclick="if(event.target===this)closeModal()">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal()">&#10005; Close</button>
@@ -772,7 +712,6 @@ function doLogin(){
   el('hdr-name').textContent=dn;
   var rt=el('hdr-role-tag');rt.textContent=role.toUpperCase();rt.className='user-role-tag role-'+role;
   el('upload-link-btn').style.display=role==='admin'?'inline-block':'none';
-  el('mail-bm-btn').style.display=role==='rh'?'inline-block':'none';
   buildPills();buildStateFilter();buildBankAMFilter();
   switchTab('cases');
   logLogin('Login');
@@ -1608,230 +1547,6 @@ function handleUploadFile(file){
   };reader.readAsText(file);
 }
 function parseCSV(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
-/* ======================================================
-   BM MAIL — RH sends pendency reminders BM-wise
-   Uses Apps Script action=send_bm_emails (POST)
-   ====================================================== */
-
-function openMailModal(){
-  /* Get all pending cases in RH scope */
-  var allData = getMyData().filter(function(r){
-    return r._pendency && r._pendency !== 'No pending';
-  });
-  if(!allData.length){ alert('No pending cases found.'); return; }
-
-  /* Build BM list for checkboxes */
-  var bmSet = {};
-  allData.forEach(function(r){
-    var bm = r._bm||'';
-    if(bm && !bmSet[bm]) bmSet[bm] = r._am||'';
-  });
-  var bms = Object.keys(bmSet).sort();
-
-  /* Populate BM checkboxes */
-  var bmBox = el('mail-bm-checkboxes');
-  if(bmBox){
-    bmBox.innerHTML = bms.map(function(bm){
-      var lbl = bm.indexOf('@')>-1 ? bm.split('@')[0] : bm;
-      var cnt = allData.filter(function(r){return r._bm===bm;}).length;
-      return '<label style="display:flex;align-items:center;gap:6px;padding:3px 4px;font-size:12px;cursor:pointer;border-radius:3px" '+
-        'onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">' +
-        '<input type="checkbox" class="mail-bm-chk" value="'+esc(bm)+'" checked style="cursor:pointer"> '+
-        '<span style="flex:1">'+esc(lbl)+'</span>'+
-        '<span style="font-family:var(--mono);font-size:10px;color:var(--text3)">'+cnt+'</span>'+
-        '</label>';
-    }).join('');
-  }
-
-  /* Populate ageing checkboxes */
-  var ageBox = el('mail-age-checkboxes');
-  var ageOpts = [
-    {key:'120 Days Above',lbl:'120D+',col:'#c0392b'},
-    {key:'90 Days Above', lbl:'90D+', col:'#c05621'},
-    {key:'60 Days Above', lbl:'60D+', col:'#d97706'},
-    {key:'45 Days Above', lbl:'45D+', col:'#926800'},
-    {key:'30 Days Above', lbl:'30D+', col:'#1a7a3c'},
-    {key:'15 Days Above', lbl:'15D+', col:'#0891b2'}
-  ];
-  if(ageBox){
-    ageBox.innerHTML = ageOpts.map(function(a){
-      var cnt = allData.filter(function(r){return r['PDD Ageing (Days)']===a.key;}).length;
-      if(!cnt) return '';
-      return '<label style="display:flex;align-items:center;gap:6px;padding:3px 4px;font-size:12px;cursor:pointer;border-radius:3px" '+
-        'onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">' +
-        '<input type="checkbox" class="mail-age-chk" value="'+esc(a.key)+'" checked style="cursor:pointer"> '+
-        '<span style="color:'+a.col+';font-weight:700;font-family:var(--mono)">'+a.lbl+'</span>'+
-        '<span style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:auto">'+cnt+'</span>'+
-        '</label>';
-    }).join('');
-  }
-
-  /* Store base data */
-  window._mailAllData = allData;
-  window._mailBMAmMap = bmSet;
-
-  /* Reset */
-  var ms=el('mail-status-msg'); if(ms) ms.textContent='';
-  var mb=el('mail-send-btn'); if(mb){ mb.textContent='\u2709 Send Emails'; mb.disabled=false; mb.style.background='#1a7a3c'; }
-  var pc=el('mail-preview-content'); if(pc) pc.innerHTML='<div style="color:var(--text3);font-size:12px;padding:12px">Click &#128269; Preview Cases after selecting filters above.</div>';
-  var fs=el('mail-filter-summary'); if(fs) fs.textContent='';
-  el('mail-modal').classList.add('open');
-}
-
-function mailSelectAllBMs(checked){
-  document.querySelectorAll('.mail-bm-chk').forEach(function(c){c.checked=checked;});
-}
-function mailSelectAllAges(checked){
-  document.querySelectorAll('.mail-age-chk').forEach(function(c){c.checked=checked;});
-}
-
-function buildMailPreview(){
-  var allData = window._mailAllData || [];
-  /* Get selected BMs */
-  var selBMs = [];
-  document.querySelectorAll('.mail-bm-chk:checked').forEach(function(c){ selBMs.push(c.value); });
-  /* Get selected ageing */
-  var selAges = [];
-  document.querySelectorAll('.mail-age-chk:checked').forEach(function(c){ selAges.push(c.value); });
-
-  if(!selBMs.length){ alert('Please select at least one BM.'); return; }
-  if(!selAges.length){ alert('Please select at least one ageing bucket.'); return; }
-
-  /* Filter data */
-  var filtered = allData.filter(function(r){
-    return selBMs.indexOf(r._bm||'') > -1 && selAges.indexOf(r['PDD Ageing (Days)']) > -1;
-  });
-
-  if(!filtered.length){
-    var pc=el('mail-preview-content');
-    if(pc) pc.innerHTML='<div style="color:var(--text3);font-size:12px;padding:12px;text-align:center">No cases match the selected BMs and ageing buckets.</div>';
-    var fs=el('mail-filter-summary'); if(fs) fs.textContent='0 cases';
-    window._mailBMGroups = {};
-    return;
-  }
-
-  /* Group by BM */
-  var bmGroups = {};
-  filtered.forEach(function(r){
-    var bm = r._bm||'Unassigned';
-    if(!bmGroups[bm]) bmGroups[bm] = { bm:bm, am:r._am||'', cases:[] };
-    bmGroups[bm].cases.push(r);
-  });
-  window._mailBMGroups = bmGroups;
-
-  /* Build preview */
-  var previewHtml = '';
-  var totalCases  = 0;
-  var bmCount     = 0;
-  Object.keys(bmGroups).sort().forEach(function(bm){
-    var grp = bmGroups[bm];
-    var bmLbl = bm.indexOf('@')>-1 ? bm.split('@')[0] : bm;
-    var amLbl = grp.am.indexOf('@')>-1 ? grp.am.split('@')[0] : grp.am;
-    totalCases += grp.cases.length;
-    bmCount++;
-    var rows = grp.cases.map(function(r){
-      var ag = r['PDD Ageing (Days)'];
-      return '<tr>'+
-        '<td style="font-family:var(--mono);color:var(--accent);font-size:11px">'+esc(r['Loan ID']||'')+'</td>'+
-        '<td style="font-size:12px">'+esc((r['Customer Name']||'').substring(0,20))+'</td>'+
-        '<td><span class="ageing-badge '+getACls(ag)+'" style="font-size:10px">'+AGEING_LABELS[ag]+'</span></td>'+
-        '<td><span class="pendency-tag '+getPCls(r._pendency)+'" style="font-size:10px">'+esc(r._pendency||'')+'</span></td>'+
-        '<td style="font-size:11px;color:var(--text2)">'+esc((r['Dealer Name']||'').substring(0,18))+'</td>'+
-        '</tr>';
-    }).join('');
-    previewHtml +=
-      '<div class="mail-bm-group">'+
-      '<div class="mail-bm-group-hdr">'+
-        '<span>&#128100; <strong>'+esc(bmLbl)+'</strong>&nbsp;<span style="color:var(--text3);font-weight:400;font-size:11px">CC: '+esc(amLbl)+'</span></span>'+
-        '<span class="bm-case-count">'+grp.cases.length+' case(s)</span>'+
-      '</div>'+
-      '<table class="mail-preview-tbl">'+
-        '<thead><tr><th>Loan ID</th><th>Customer</th><th>Ageing</th><th>Pendency</th><th>Dealer</th></tr></thead>'+
-        '<tbody>'+rows+'</tbody>'+
-      '</table></div>';
-  });
-
-  previewHtml = '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:9px 14px;margin-bottom:10px;font-size:12px">'+
-    '&#9888; <strong>'+bmCount+' BM(s)</strong> — <strong>'+totalCases+' case(s)</strong> will be emailed.</div>' + previewHtml;
-
-  var pc=el('mail-preview-content'); if(pc) pc.innerHTML=previewHtml;
-  var fs=el('mail-filter-summary'); if(fs) fs.textContent=bmCount+' BM(s), '+totalCases+' cases';
-}
-
-function closeMailModal(){
-  var mo = el('mail-modal');
-  if(mo) mo.classList.remove('open');
-}
-
-function sendBMEmails(){
-  var grps = window._mailBMGroups;
-  console.log('[MAIL] grps:', grps ? Object.keys(grps).length+' BMs' : 'undefined');
-  if(!grps || !Object.keys(grps).length){ alert('No data to send. Click Preview Cases first.'); return; }
-  var btn = el('mail-send-btn');
-  var msg = el('mail-status-msg');
-  if(btn){ btn.textContent='Sending\u2026'; btn.disabled=true; btn.style.background='#c05621'; }
-
-  /* Build one entry per BM with compact case data */
-  var bmList = Object.keys(grps).map(function(bm){
-    var grp = grps[bm];
-    return {
-      bm: grp.bm,
-      am: grp.am,
-      cases: grp.cases.map(function(r){
-        return {
-          i: (r['Loan ID']||'').substring(0,12),
-          c: (r['Customer Name']||'').substring(0,15),
-          d: (r['Dealer Name']||'').substring(0,15),
-          a: r['PDD Ageing (Days)']||'',
-          p: (r._pendency||'').substring(0,20),
-          b: (r._bank||'').substring(0,20),
-          m: r._amt||0,
-          o: (r['RTO Ops Name']||r['Rto Ops name']||'').substring(0,15)
-        };
-      })
-    };
-  });
-
-  console.log('[MAIL] bmList length:', bmList.length);
-  console.log('[MAIL] bmList:', bmList.length, 'BMs to email');
-  var totalBMs = bmList.length;
-  var bmIdx    = 0;
-
-  function sendOneBM(){
-    if(bmIdx >= bmList.length){
-      if(btn){ btn.textContent='\u2713 Emails Sent!'; btn.style.background='#1a7a3c'; btn.disabled=false; }
-      if(msg) msg.textContent='Emails sent to '+totalBMs+' BM(s). Check their inboxes.';
-      setTimeout(function(){ closeMailModal(); },4000);
-      return;
-    }
-    var entry = bmList[bmIdx]; bmIdx++;
-    if(msg) msg.textContent='Sending '+bmIdx+' of '+totalBMs+': '+(entry.bm.split('@')[0])+'\u2026';
-
-    /* One BM per GET request — stays well under URL length limits */
-    var payload = JSON.stringify({
-      type:'send_bm_emails',
-      rh:'sachidananda.panigrahy@rupyy.com',
-      bms:[entry]
-    });
-    var getUrl = GAS_URL+'?action=send_bm_emails&batchData='+encodeURIComponent(payload);
-    console.log('[MAIL] Sending to GAS:', getUrl.substring(0, 150));
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', getUrl, true);
-    xhr.onload = function(){
-      /* Continue regardless of response — keep sending remaining BMs */
-      sendOneBM();
-    };
-    xhr.onerror = function(){
-      /* On network error, still try next BM */
-      console.warn('Network error for BM: '+entry.bm);
-      sendOneBM();
-    };
-    xhr.send();
-  }
-
-  sendOneBM();
-}
-
 function exportCSV(){
   var cols=['Loan ID','Customer Name','Reg num','RTo code','Dealer Name','City','State','PDD Ageing (Days)','RC Age (Days)','Disbursed Amount','Actual pendnecy AM updated','BM name','AM Name','RH name','Disb bank Name','product_type','Latest RTO Ops Remarks'];
   var rows=[cols.join(',')];filteredData.forEach(function(r){rows.push(cols.map(function(c){return '"'+String(r[c]||'').replace(/"/g,'""')+'"';}).join(','));});
@@ -1839,10 +1554,10 @@ function exportCSV(){
 }
 /* ======================================================
    REMARKS + REMINDERS — Google Sheet Synced
-   Apps Script: https://script.google.com/macros/s/AKfycbzigOUEz5A-WhOBHv7yqjBmzcrDR4qVEGYmrkbnplANPcjUFtVFfpWjGhh-LIF-6kQ/exec
+   Apps Script: https://script.google.com/macros/s/AKfycbx9fMjPHu3kSPwbqAe0Nnem_wA80tNZcyPffwsmJsMejxrzWrvzUUhbA4Tzf_3N-Dg/exec
    ====================================================== */
 
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbzigOUEz5A-WhOBHv7yqjBmzcrDR4qVEGYmrkbnplANPcjUFtVFfpWjGhh-LIF-6kQ/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9fMjPHu3kSPwbqAe0Nnem_wA80tNZcyPffwsmJsMejxrzWrvzUUhbA4Tzf_3N-Dg/exec';
 var _remarksCache = {};   /* { loanId: {remark,commitDate,status,bmUser,bmDisplay,...} } */
 var _remarksFetched = false;
 
