@@ -275,6 +275,13 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 .rem-sum-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;box-shadow:var(--shadow-sm)}
 .rem-sum-val{font-family:var(--mono);font-size:28px;font-weight:700;margin-bottom:4px}
 .rem-sum-lbl{font-size:11px;color:var(--text2)}
+.mail-preview-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.mail-preview-tbl th{padding:7px 10px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);background:var(--surface2);text-align:left}
+.mail-preview-tbl td{padding:7px 10px;border-bottom:1px solid #edf2f7;font-size:12px;color:var(--text2)}
+.mail-preview-tbl tbody tr:hover td{background:#f0f7ff}
+.mail-bm-group{margin-bottom:14px}
+.mail-bm-group-hdr{font-size:12px;font-weight:700;color:var(--accent);padding:6px 10px;background:var(--surface2);border-radius:4px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.mail-bm-group-hdr .bm-case-count{font-family:var(--mono);font-size:11px;color:var(--text2)}
 .bm-remark-input{width:100%;padding:4px 7px;border:1px solid var(--border2);border-radius:4px;font-family:var(--sans);font-size:11px;color:var(--text);background:#fff;outline:none;resize:vertical;min-height:36px;transition:border-color .2s}
 .bm-remark-input:focus{border-color:var(--accent2);box-shadow:0 0 0 2px rgba(26,92,180,.08)}
 .bm-remark-input:disabled{background:var(--surface2);color:var(--text2);cursor:default}
@@ -373,6 +380,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     </div>
     <div class="header-right">
       <button class="upload-link-btn" id="upload-link-btn" onclick="openUpload()" style="display:none">&#8679; Upload Data</button>
+      <button class="upload-link-btn" id="mail-bm-btn" onclick="openMailModal()" style="display:none;background:#1a7a3c">&#9993; Mail BMs</button>
       <div class="user-chip">
         <div class="user-avatar" id="hdr-avatar">A</div>
         <div class="user-name" id="hdr-name">User</div>
@@ -589,6 +597,27 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
   </div>
 </div>
 
+<!-- MAIL BM MODAL -->
+<div class="modal-overlay" id="mail-modal" onclick="if(event.target===this)closeMailModal()">
+  <div class="modal-box" style="max-width:560px">
+    <button class="modal-close" onclick="closeMailModal()">&#10005; Close</button>
+    <div class="modal-title">&#9993; Send Pendency Reminder to BMs</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+      Emails will be sent <strong>BM-wise</strong> — each BM receives only their own cases.<br>
+      <strong>To:</strong> BM &nbsp;|&nbsp; <strong>CC:</strong> AM &amp; RH
+    </p>
+    <div id="mail-preview-section">
+      <div class="section-label" style="margin-bottom:10px">Preview — Cases to be Sent</div>
+      <div id="mail-preview-content" style="max-height:260px;overflow-y:auto"></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;align-items:center">
+      <span id="mail-status-msg" style="font-size:12px;color:var(--text2)"></span>
+      <button class="reset-btn" onclick="closeMailModal()">Cancel</button>
+      <button class="export-btn" id="mail-send-btn" onclick="sendBMEmails()" style="background:#1a7a3c">&#9993; Send Emails</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="remark-modal" onclick="if(event.target===this)closeModal()">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal()">&#10005; Close</button>
@@ -712,6 +741,7 @@ function doLogin(){
   el('hdr-name').textContent=dn;
   var rt=el('hdr-role-tag');rt.textContent=role.toUpperCase();rt.className='user-role-tag role-'+role;
   el('upload-link-btn').style.display=role==='admin'?'inline-block':'none';
+  el('mail-bm-btn').style.display=role==='rh'?'inline-block':'none';
   buildPills();buildStateFilter();buildBankAMFilter();
   switchTab('cases');
   logLogin('Login');
@@ -1547,6 +1577,137 @@ function handleUploadFile(file){
   };reader.readAsText(file);
 }
 function parseCSV(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
+/* ======================================================
+   BM MAIL — RH sends pendency reminders BM-wise
+   Uses Apps Script action=send_bm_emails (POST)
+   ====================================================== */
+
+function openMailModal(){
+  /* Build preview from current filteredData */
+  var data = filteredData.length ? filteredData : getMyData();
+  /* Filter: only cases with actual pendency */
+  data = data.filter(function(r){ return r._pendency && r._pendency !== 'No pending'; });
+
+  if(!data.length){
+    alert('No pending cases match the current filters. Please select pendency type(s) first using the pills.');
+    return;
+  }
+
+  /* Group by BM */
+  var bmGroups = {};
+  data.forEach(function(r){
+    var bm = r._bm || 'Unassigned';
+    if(!bmGroups[bm]) bmGroups[bm] = { bm:bm, am:r._am||'', cases:[] };
+    bmGroups[bm].cases.push(r);
+  });
+
+  /* Build preview HTML */
+  var previewHtml = '';
+  var totalCases  = 0;
+  var bmCount     = 0;
+  Object.keys(bmGroups).sort().forEach(function(bm){
+    var grp = bmGroups[bm];
+    var bmLbl = bm.indexOf('@')>-1 ? bm.split('@')[0] : bm;
+    var amLbl = grp.am.indexOf('@')>-1 ? grp.am.split('@')[0] : grp.am;
+    totalCases += grp.cases.length;
+    bmCount++;
+    var rows = grp.cases.map(function(r){
+      var ag = r['PDD Ageing (Days)'];
+      return '<tr>'+
+        '<td style="font-family:var(--mono);color:var(--accent);font-size:11px">'+esc(r['Loan ID']||'')+'</td>'+
+        '<td>'+esc((r['Customer Name']||'').substring(0,20))+'</td>'+
+        '<td><span class="ageing-badge '+getACls(ag)+'" style="font-size:10px">'+AGEING_LABELS[ag]+'</span></td>'+
+        '<td><span class="pendency-tag '+getPCls(r._pendency)+'" style="font-size:10px">'+esc(r._pendency||'')+'</span></td>'+
+        '<td style="font-size:10px;color:var(--text2)">'+esc(r['Dealer Name']||'')+'</td>'+
+        '</tr>';
+    }).join('');
+    previewHtml +=
+      '<div class="mail-bm-group">'+
+      '<div class="mail-bm-group-hdr">'+
+        '<span>&#128100; <strong>'+esc(bmLbl)+'</strong> &nbsp;<span style="color:var(--text3);font-weight:400;font-size:11px">CC: '+esc(amLbl)+'</span></span>'+
+        '<span class="bm-case-count">'+grp.cases.length+' case(s)</span>'+
+      '</div>'+
+      '<table class="mail-preview-tbl">'+
+        '<thead><tr><th>Loan ID</th><th>Customer</th><th>Ageing</th><th>Pendency</th><th>Dealer</th></tr></thead>'+
+        '<tbody>'+rows+'</tbody>'+
+      '</table></div>';
+  });
+
+  /* Summary line */
+  previewHtml = '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px">'+
+    '&#9888; <strong>'+bmCount+' BM(s)</strong> will receive emails covering <strong>'+totalCases+' case(s)</strong>.'+
+    (activePills.length>0 ? ' Filtered pendency: <strong>'+activePills.join(', ')+'</strong>.' : ' All pending pendency types included.')+
+    '</div>' + previewHtml;
+
+  var pc = el('mail-preview-content');
+  if(pc) pc.innerHTML = previewHtml;
+  var ms = el('mail-status-msg');
+  if(ms) ms.textContent = '';
+  var mb = el('mail-send-btn');
+  if(mb){ mb.textContent = '\u2709 Send Emails'; mb.disabled = false; mb.style.background = '#1a7a3c'; }
+  el('mail-modal').classList.add('open');
+
+  /* Store grouped data for send step */
+  window._mailBMGroups = bmGroups;
+}
+
+function closeMailModal(){
+  var mo = el('mail-modal');
+  if(mo) mo.classList.remove('open');
+}
+
+function sendBMEmails(){
+  var grps = window._mailBMGroups;
+  if(!grps || !Object.keys(grps).length){ alert('No data to send.'); return; }
+  var btn = el('mail-send-btn');
+  var msg = el('mail-status-msg');
+  if(btn){ btn.textContent = 'Sending\u2026'; btn.disabled = true; btn.style.background = '#c05621'; }
+  if(msg) msg.textContent = 'Connecting to mail server\u2026';
+
+  /* Build payload */
+  var bmList = [];
+  Object.keys(grps).forEach(function(bm){
+    var grp = grps[bm];
+    bmList.push({
+      bmEmail:  grp.bm,
+      amEmail:  grp.am,
+      cases:    grp.cases.map(function(r){
+        return {
+          loanId:     r['Loan ID']||'',
+          custName:   r['Customer Name']||'',
+          dealerName: r['Dealer Name']||'',
+          city:       r['City']||'',
+          state:      r['State']||'',
+          pddAgeing:  r['PDD Ageing (Days)']||'',
+          rcAge:      r['RC Age (Days)']||'',
+          pendency:   r._pendency||'',
+          disbAmt:    r._amt||0,
+          bank:       r._bank||'',
+          rtoOpsName: r['RTO Ops Name']||r['Rto Ops name']||'',
+          rtoRemark:  (r['Latest RTO Ops Remarks']||'').substring(0,200)
+        };
+      })
+    });
+  });
+
+  var payload = JSON.stringify({ type:'send_bm_emails', rhEmail: 'sachidananda.panigrahy@rupyy.com', bms: bmList });
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', GAS_URL, true);
+  xhr.setRequestHeader('Content-Type','text/plain');
+  xhr.onload = function(){
+    var isOk = false; var sent = 0;
+    try{ var resp = JSON.parse(xhr.responseText); isOk = resp.status==='ok'; sent = resp.sent||0; }catch(e){ isOk = true; }
+    if(btn){ btn.textContent = isOk ? '\u2713 Sent!' : '\u26a0 Error'; btn.style.background = isOk ? '#1a7a3c' : '#c0392b'; btn.disabled = false; }
+    if(msg) msg.textContent = isOk ? 'Emails sent to '+Object.keys(grps).length+' BM(s).' : 'Error — check Apps Script logs.';
+    if(isOk) setTimeout(function(){ closeMailModal(); }, 3000);
+  };
+  xhr.onerror = function(){
+    if(btn){ btn.textContent = '\u26a0 Network Error'; btn.disabled = false; btn.style.background = '#c0392b'; }
+    if(msg) msg.textContent = 'Network error. Try again.';
+  };
+  xhr.send(payload);
+}
+
 function exportCSV(){
   var cols=['Loan ID','Customer Name','Reg num','RTo code','Dealer Name','City','State','PDD Ageing (Days)','RC Age (Days)','Disbursed Amount','Actual pendnecy AM updated','BM name','AM Name','RH name','Disb bank Name','product_type','Latest RTO Ops Remarks'];
   var rows=[cols.join(',')];filteredData.forEach(function(r){rows.push(cols.map(function(c){return '"'+String(r[c]||'').replace(/"/g,'""')+'"';}).join(','));});
