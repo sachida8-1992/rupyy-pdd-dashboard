@@ -1768,78 +1768,64 @@ function sendBMEmails(){
   if(!grps || !Object.keys(grps).length){ alert('No data to send.'); return; }
   var btn = el('mail-send-btn');
   var msg = el('mail-status-msg');
-  if(btn){ btn.textContent = 'Sending\u2026'; btn.disabled = true; btn.style.background = '#c05621'; }
-  if(msg) msg.textContent = 'Preparing\u2026';
+  if(btn){ btn.textContent='Sending\u2026'; btn.disabled=true; btn.style.background='#c05621'; }
 
-  /* Build compact BM list — short keys to keep payload small */
-  var bmList = [];
-  Object.keys(grps).forEach(function(bm){
+  /* Build one entry per BM with compact case data */
+  var bmList = Object.keys(grps).map(function(bm){
     var grp = grps[bm];
-    bmList.push({
+    return {
       bm: grp.bm,
       am: grp.am,
       cases: grp.cases.map(function(r){
         return {
           i: (r['Loan ID']||'').substring(0,12),
-          c: (r['Customer Name']||'').substring(0,25),
-          d: (r['Dealer Name']||'').substring(0,20),
+          c: (r['Customer Name']||'').substring(0,15),
+          d: (r['Dealer Name']||'').substring(0,15),
           a: r['PDD Ageing (Days)']||'',
-          p: (r._pendency||'').substring(0,30),
-          b: (r._bank||'').substring(0,25),
+          p: (r._pendency||'').substring(0,20),
+          b: (r._bank||'').substring(0,20),
           m: r._amt||0,
-          o: (r['RTO Ops Name']||r['Rto Ops name']||'').substring(0,20)
+          o: (r['RTO Ops Name']||r['Rto Ops name']||'').substring(0,15)
         };
       })
-    });
+    };
   });
 
-  /* Split into batches of 8 BMs to stay under Apps Script 50KB POST limit */
-  var BATCH = 8;
-  var batches = [];
-  for(var i=0; i<bmList.length; i+=BATCH){
-    batches.push(bmList.slice(i, i+BATCH));
-  }
-
   var totalBMs = bmList.length;
-  var sentCount = 0;
-  var batchIdx = 0;
+  var bmIdx    = 0;
 
-  function sendBatch(){
-    if(batchIdx >= batches.length){
-      if(btn){ btn.textContent = '\u2713 Emails Sent!'; btn.style.background='#1a7a3c'; btn.disabled=false; }
-      if(msg) msg.textContent = 'Emails dispatched to '+totalBMs+' BM(s). Check their inboxes.';
-      setTimeout(function(){ closeMailModal(); }, 4000);
+  function sendOneBM(){
+    if(bmIdx >= bmList.length){
+      if(btn){ btn.textContent='\u2713 Emails Sent!'; btn.style.background='#1a7a3c'; btn.disabled=false; }
+      if(msg) msg.textContent='Emails sent to '+totalBMs+' BM(s). Check their inboxes.';
+      setTimeout(function(){ closeMailModal(); },4000);
       return;
     }
-    var batch = batches[batchIdx];
-    batchIdx++;
-    if(msg) msg.textContent = 'Sending batch '+batchIdx+' of '+batches.length+'\u2026';
+    var entry = bmList[bmIdx]; bmIdx++;
+    if(msg) msg.textContent='Sending '+bmIdx+' of '+totalBMs+': '+(entry.bm.split('@')[0])+'\u2026';
 
+    /* One BM per GET request — stays well under URL length limits */
     var payload = JSON.stringify({
-      type: 'send_bm_emails',
-      rh:   'sachidananda.panigrahy@rupyy.com',
-      bms:  batch
+      type:'send_bm_emails',
+      rh:'sachidananda.panigrahy@rupyy.com',
+      bms:[entry]
     });
-
-    /* Use fetch with no-cors to avoid CORS preflight block on Apps Script POST */
-    fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: payload
-    })
-    .then(function(){
-      /* no-cors returns opaque response - can't read it, but request went through */
-      sendBatch();
-    })
-    .catch(function(err){
-      if(btn){ btn.textContent='\u26a0 Network Error'; btn.disabled=false; btn.style.background='#c0392b'; }
-      if(msg) msg.textContent='Network error on batch '+batchIdx+'. Try again.';
-      console.error('Mail batch error:', err);
-    });
+    var getUrl = GAS_URL+'?action=send_bm_emails&batchData='+encodeURIComponent(payload);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', getUrl, true);
+    xhr.onload = function(){
+      /* Continue regardless of response — keep sending remaining BMs */
+      sendOneBM();
+    };
+    xhr.onerror = function(){
+      /* On network error, still try next BM */
+      console.warn('Network error for BM: '+entry.bm);
+      sendOneBM();
+    };
+    xhr.send();
   }
 
-  sendBatch(); /* start first batch */
+  sendOneBM();
 }
 
 function exportCSV(){
@@ -1849,10 +1835,10 @@ function exportCSV(){
 }
 /* ======================================================
    REMARKS + REMINDERS — Google Sheet Synced
-   Apps Script: https://script.google.com/macros/s/AKfycbygKF11yQJRqghZBqO47xWGanl68EANM7lt-q0-bqrvJwnDVhzyrBF7qOj5pZOrag/exec
+   Apps Script: https://script.google.com/macros/s/AKfycbzigOUEz5A-WhOBHv7yqjBmzcrDR4qVEGYmrkbnplANPcjUFtVFfpWjGhh-LIF-6kQ/exec
    ====================================================== */
 
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbygKF11yQJRqghZBqO47xWGanl68EANM7lt-q0-bqrvJwnDVhzyrBF7qOj5pZOrag/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzigOUEz5A-WhOBHv7yqjBmzcrDR4qVEGYmrkbnplANPcjUFtVFfpWjGhh-LIF-6kQ/exec';
 var _remarksCache = {};   /* { loanId: {remark,commitDate,status,bmUser,bmDisplay,...} } */
 var _remarksFetched = false;
 
