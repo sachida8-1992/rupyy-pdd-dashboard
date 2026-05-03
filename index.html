@@ -1786,7 +1786,8 @@ function sendBMEmails(){
           p: (r._pendency||'').substring(0,20),
           b: (r._bank||'').substring(0,20),
           m: r._amt||0,
-          o: (r['RTO Ops Name']||r['Rto Ops name']||'').substring(0,15)
+          o: (r['RTO Ops Name']||r['Rto Ops name']||'').substring(0,15),
+          pt: (r['product_type']||'').substring(0,15)
         };
       })
     };
