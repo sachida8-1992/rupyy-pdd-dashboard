@@ -229,6 +229,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
 .bm-detail-tbl td{padding:7px 10px;border-bottom:1px solid #edf2f7;font-size:11px;color:var(--text2)}
 .bm-detail-tbl tbody tr:hover td{background:#f0f7ff}
 .pend-summary-outer{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden}
+#pend-age-body-all tr:first-child td{border-top:2px dashed var(--border)}
 .pend-summary-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
 .pend-collapse-icon{font-size:10px;color:var(--text3);transition:transform .2s;display:inline-block}
 .pend-collapse-icon.open{transform:rotate(90deg)}
@@ -446,12 +447,8 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
                 </tr>
               </thead>
               <tbody id="pend-age-body"></tbody>
-              <tfoot id="pend-age-foot" style="display:none"></tfoot>
-            </table>
-            <!-- Show All rows (hidden by default) -->
-            <table class="pend-age-tbl" id="pend-age-tbl-all" style="display:none;border-top:none">
-              <tbody id="pend-age-body-all"></tbody>
-              <tfoot id="pend-age-foot-all"></tfoot>
+              <tbody id="pend-age-body-all" style="display:none"></tbody>
+              <tfoot id="pend-age-foot"></tfoot>
             </table>
             <div id="pend-show-all-row" style="text-align:center;padding:8px 0;display:none">
               <button class="reset-btn" id="pend-show-all-btn" onclick="togglePendAll()" style="font-size:11px;padding:5px 14px">
@@ -1281,13 +1278,11 @@ function renderCasesCharts(data){
 }
 
 function togglePendAll(){
-  var allTbl=el('pend-age-tbl-all');
-  var foot  =el('pend-age-foot');
-  var btn   =el('pend-show-all-btn');
-  if(!allTbl)return;
-  var isOpen=allTbl.style.display!=='none';
-  allTbl.style.display=isOpen?'none':'table';
-  if(foot)foot.style.display=isOpen?'none':'table-row-group';
+  var allBody=el('pend-age-body-all');
+  var btn    =el('pend-show-all-btn');
+  if(!allBody)return;
+  var isOpen=allBody.style.display!=='none';
+  allBody.style.display=isOpen?'none':'table-row-group';
   if(btn)btn.innerHTML=isOpen?'&#8964; View All Pendency Types':'&#8963; Show Top 5 Only';
 }
 
@@ -1295,7 +1290,6 @@ function renderPendAgeTable(data){
   var tbody    = el('pend-age-body');
   var tbodyAll = el('pend-age-body-all');
   var tfoot    = el('pend-age-foot');
-  var tfootAll = el('pend-age-foot-all');
   var showAllRow = el('pend-show-all-row');
   var countChip  = el('pend-count-chip');
   if(!tbody)return;
@@ -1374,8 +1368,8 @@ function renderPendAgeTable(data){
   /* Remaining rows in hidden all-table tbody */
   if(tbodyAll)tbodyAll.innerHTML=rest.map(buildRow).join('');
 
-  /* Footer totals (shown when all expanded) */
-  var footHtml='<tr>'+
+  /* Single footer row - always visible */
+  var footHtml='<tr style="background:var(--surface2)">'+
     '<td><strong>Total Pending</strong></td>'+
     AGES.map(function(ag){return mkCell(totals[ag].cnt?totals[ag]:null);}).join('')+
     '<td><div class="pend-age-cell">'+
@@ -1384,18 +1378,16 @@ function renderPendAgeTable(data){
     '</div></td>'+
     '</tr>';
   if(tfoot)tfoot.innerHTML=footHtml;
-  if(tfootAll)tfootAll.innerHTML=footHtml;
 
   /* Show/hide "View All" button */
   if(showAllRow)showAllRow.style.display=rest.length>0?'block':'none';
   if(countChip)countChip.textContent='('+pKeys.length+' types)';
 
-  /* Reset "View All" button state */
+  /* Reset expanded state */
   var btn=el('pend-show-all-btn');
-  var allTbl=el('pend-age-tbl-all');
+  var allBody=el('pend-age-body-all');
   if(btn)btn.innerHTML='&#8964; View All Pendency Types';
-  if(allTbl)allTbl.style.display='none';
-  if(tfoot)tfoot.style.display='none';
+  if(allBody)allBody.style.display='none';
 }
 
 
