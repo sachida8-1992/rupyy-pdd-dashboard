@@ -1541,6 +1541,7 @@ function renderTable(){
       '<td style="font-size:11px;color:var(--text2)">'+esc(bmLbl||'Unassigned')+'</td>'+
       '<td style="font-size:11px;color:var(--text2)" title="'+esc(r._bank)+'">'+esc(bkLbl||'—')+'</td>'+
       '<td><span class="pendency-tag pt-other" style="font-size:10px">'+esc(r['product_type']||'—')+'</span></td>'+
+      '<td style="font-size:11px;color:var(--text2)">'+esc(r['Loan Type']||'—')+'</td>'+
       '<td style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent)">'+fmtAmt(r._amt)+'</td>'+
       '<td style="font-size:11px;color:var(--text2);white-space:nowrap">'+esc(r['RTO Ops Name']||r['Rto Ops name']||'—')+'</td>'+
       '<td class="remark-cell"><div class="remark-text" data-idx="'+i+'">'+esc(firstRem||'No remarks')+'</div>'+(rmk.indexOf('|')>-1?'<span class="expand-btn" data-idx="'+i+'">+ View all</span>':'')+'</td>'+
