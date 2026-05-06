@@ -498,6 +498,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
                 <th onclick="sortTable('Disbursed Amount')">Disb Amt &#8597;</th>
                 <th onclick="sortTable('Rto Ops name')">RTO Ops Name &#8597;</th>
                 <th>RTO Ops Remark</th>
+                <th>AM Remark</th>
                 <th>BM Remark &amp; Timeline</th>
               </tr>
             </thead>
@@ -1201,6 +1202,7 @@ function refreshAll(){
   if(tabReminders){tabReminders.style.display='inline-block';}
   /* Fetch remarks from server on every refresh */
   fetchAndCacheRemarks();
+  fetchAndCacheAMRemarks();
   applyFilters();
 }
 
@@ -1541,7 +1543,7 @@ function renderTable(){
       '<td style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent)">'+fmtAmt(r._amt)+'</td>'+
       '<td style="font-size:11px;color:var(--text2);white-space:nowrap">'+esc(r['RTO Ops Name']||r['Rto Ops name']||'—')+'</td>'+
       '<td class="remark-cell"><div class="remark-text" data-idx="'+i+'">'+esc(firstRem||'No remarks')+'</div>'+(rmk.indexOf('|')>-1?'<span class="expand-btn" data-idx="'+i+'">+ View all</span>':'')+'</td>'+
-      getBMRemarkCell(lid,i,r)+'</tr>';
+      getAMRemarkCell(lid,i,r)+getBMRemarkCell(lid,i,r)+'</tr>';
   }
   tbody.innerHTML=rows;
   document.querySelectorAll('[data-idx]').forEach(function(e){e.onclick=function(){showModal(parseInt(this.getAttribute('data-idx')));};});
@@ -1838,6 +1840,7 @@ function exportCSV(){
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbyq8HFSi_hdyyrYJIjysQYtHPwgN73_a6qjfHtJerL2mmSp7-MCVEZBdjGimRpiEjI/exec';
 var _remarksCache = {};   /* { loanId: {remark,commitDate,status,bmUser,bmDisplay,...} } */
 var _remarksFetched = false;
+var _amRemarksCache = {}; /* { loanId: {remark,updatedAt,amUser,amDisplay} */
 
 /* ── HELPERS ── */
 function todayIST(){
@@ -1887,6 +1890,30 @@ function getDayLabel(diff){
 }
 
 /* ── FETCH REMARKS FROM SHEET ── */
+function fetchAndCacheAMRemarks(){
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',GAS_URL+'?action=get_am_remarks',true);
+  xhr.onload=function(){
+    try{
+      var resp=JSON.parse(xhr.responseText);
+      if(resp.remarks&&resp.remarks.length){
+        resp.remarks.forEach(function(row){
+          var lid=String(row['Loan ID']||'').trim();
+          if(!lid)return;
+          _amRemarksCache[lid]={
+            remark:    row['Remark']||'',
+            updatedAt: row['Updated At (IST)']||'',
+            amUser:    row['AM User']||'',
+            amDisplay: row['AM Display Name']||''
+          };
+        });
+        if(currentTab==='cases')renderTable();
+      }
+    }catch(e){}
+  };
+  xhr.send();
+}
+
 function fetchAndCacheRemarks(){
   /* Use XMLHttpRequest to avoid CORS preflight issues with Apps Script */
   var xhr=new XMLHttpRequest();
@@ -2050,6 +2077,134 @@ function logLogin(action){
 }
 
 /* ── GENERATE BM REMARK CELL (inline in case table) ── */
+function getAMRemarkCell(loanId,idx,r){
+  var saved=_amRemarksCache[loanId]||null;
+  var isAM=(currentRole==='am');
+  var remark=saved?saved.remark:'';
+  var today=todayIST();
+
+  if(isAM){
+    /* AM: side-by-side saved view + edit fields */
+    var savedView='';
+    if(saved&&saved.remark){
+      savedView=
+        '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 8px">'+
+        '<div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Saved</div>'+
+        '<div style="font-size:11px;color:var(--text);line-height:1.4;word-break:break-word">'+esc(saved.remark)+'</div>'+
+        (saved.updatedAt?'<div style="font-size:10px;color:var(--text3);margin-top:4px">'+esc(saved.updatedAt)+'</div>':'')+
+        '</div>';
+    }
+    return '<td style="min-width:280px;vertical-align:top;padding:8px" '+
+      'data-am-lid="'+esc(loanId)+'" '+
+      'data-am-cust="'+esc(r['Customer Name']||'')+'" '+
+      'data-am-dealer="'+esc(r['Dealer Name']||'')+'" '+
+      'data-am-age="'+esc(r['PDD Ageing (Days)']||'')+'" '+
+      'data-am-pend="'+esc(r._pendency||'')+'" '+
+      '>'+
+      '<div style="display:flex;gap:8px;align-items:flex-start">'+
+        (saved&&saved.remark
+          ?'<div style="flex:1;min-width:0">'+savedView+'</div>'
+          :'<div style="flex:1;min-width:0;color:var(--text3);font-size:11px;padding-top:4px;font-style:italic">No remark yet</div>')+
+        '<div style="width:1px;background:var(--border);align-self:stretch;flex-shrink:0;margin:0 2px"></div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Edit</div>'+
+          '<textarea class="bm-remark-input" id="amri-'+idx+'" rows="3" placeholder="Add AM remark…" style="width:100%">'+esc(remark)+'</textarea>'+
+          '<button class="bm-save-btn" id="amrsb-'+idx+'" data-amrowidx="'+idx+'" onclick="saveAMRemark(this)" style="margin-top:4px;width:100%">Save &amp; Sync</button>'+
+        '</div>'+
+      '</div>'+
+      '</td>';
+  } else {
+    /* RH / Admin / BM: read-only view */
+    if(!saved||!saved.remark){
+      return '<td style="min-width:120px;color:var(--text3);font-size:11px;vertical-align:top;padding:8px">—</td>';
+    }
+    return '<td style="min-width:120px;vertical-align:top;padding:8px">'+
+      '<div class="remark-view-cell">'+esc(saved.remark)+'</div>'+
+      (saved.updatedAt?'<div style="font-size:10px;color:var(--text3);margin-top:3px">'+esc(saved.updatedAt)+'</div>':'')+
+      '</td>';
+  }
+}
+
+function saveAMRemark(btnEl){
+  var idx=btnEl.getAttribute('data-amrowidx');
+  var td=btnEl.closest?btnEl.closest('[data-am-lid]'):null;
+  if(!td){var el2=btnEl;while(el2&&!el2.getAttribute('data-am-lid'))el2=el2.parentElement;td=el2;}
+  var loanId=td?td.getAttribute('data-am-lid'):'';
+  if(!loanId){console.warn('saveAMRemark: no loanId');return;}
+
+  var taEl=el('amri-'+idx);
+  var rawRemark=taEl?taEl.value:'';
+  /* Sanitise: remove control characters, normalise special quotes */
+  var remark=(function(s){
+    var out='';
+    for(var ci=0;ci<s.length;ci++){var cc=s.charCodeAt(ci);if(cc>31&&cc!==127)out+=s[ci];}
+    return out;
+  })(rawRemark)
+    .split('‘').join("'").split('’').join("'")
+    .split('“').join('"').split('”').join('"')
+    .replace(/&/g,'and').replace(/</g,'(').replace(/>/g,')')
+    .trim();
+    if(!remark){alert('Please enter a remark before saving.');return;}
+
+  /* AM display name */
+  var amDisplay=currentUser;
+  var hdrName=el('hdr-name');
+  if(hdrName)amDisplay=hdrName.textContent||currentUser;
+
+  /* Update local cache immediately */
+  var nowStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+  _amRemarksCache[loanId]={remark:remark,updatedAt:nowStr,amUser:currentUser,amDisplay:amDisplay};
+
+  if(btnEl)btnEl.setAttribute('data-saving-am-lid',loanId);
+  pushAMRemarkToSheet(loanId,{
+    remark:remark,amUser:currentUser,amDisplay:amDisplay,
+    customerName:td.getAttribute('data-am-cust')||'',
+    dealerName:td.getAttribute('data-am-dealer')||'',
+    pddAgeing:td.getAttribute('data-am-age')||'',
+    pendency:td.getAttribute('data-am-pend')||''
+  },btnEl);
+}
+
+function pushAMRemarkToSheet(loanId,data,btnEl){
+  if(btnEl){btnEl.textContent='Syncing…';btnEl.className='bm-save-btn syncing';}
+  var payload=JSON.stringify({
+    type:'save_am_remark',
+    loanId:loanId,
+    remark:data.remark,
+    amUser:data.amUser,
+    amDisplay:data.amDisplay,
+    customerName:data.customerName,
+    dealerName:data.dealerName,
+    pddAgeing:data.pddAgeing,
+    pendency:data.pendency
+  });
+  var xhr=new XMLHttpRequest();
+  xhr.open('POST',GAS_URL,true);
+  xhr.setRequestHeader('Content-Type','text/plain');
+  xhr.onload=function(){
+    var isOk=false;
+    try{var resp=JSON.parse(xhr.responseText);isOk=(resp.status==='ok');}catch(e){isOk=true;}
+    if(btnEl){
+      if(isOk){
+        btnEl.textContent='Saved ✓';btnEl.className='bm-save-btn saved';
+        setTimeout(function(){
+          if(currentTab==='cases')renderTable();
+          fetchAndCacheAMRemarks();
+        },800);
+        setTimeout(function(){
+          if(btnEl&&document.body.contains(btnEl)){btnEl.textContent='Save & Sync';btnEl.className='bm-save-btn';}
+        },2500);
+      } else {
+        btnEl.textContent='Error! Retry';btnEl.className='bm-save-btn';
+      }
+    }
+  };
+  xhr.onerror=function(){
+    if(btnEl){btnEl.textContent='Network Error';btnEl.className='bm-save-btn';}
+  };
+  xhr.send(payload);
+}
+
 function getBMRemarkCell(loanId,idx,r){
   var saved=_remarksCache[loanId]||null;
   var isBM=(currentRole==='bm');
@@ -2132,42 +2287,38 @@ function getBMRemarkCell(loanId,idx,r){
 
 function saveBMRemark(btnEl){
   var idx=btnEl.getAttribute('data-rowidx');
-  /* Walk up DOM to find the <td> with data-lid (button is nested inside divs) */
   var td=btnEl.closest?btnEl.closest('[data-lid]'):null;
   if(!td){var el2=btnEl;while(el2&&!el2.getAttribute('data-lid'))el2=el2.parentElement;td=el2;}
   var loanId    =td?td.getAttribute('data-lid'):'';
-  console.log('[PDD] saveBMRemark called | idx='+idx+' | loanId='+loanId+' | td='+!!td);
+  if(!loanId){console.warn('saveBMRemark: no loanId');return;}
   var custName  =td?td.getAttribute('data-cust'):'';
   var dealerName=td?td.getAttribute('data-dealer'):'';
   var pddAge    =td?td.getAttribute('data-age'):'';
   var pendency  =td?td.getAttribute('data-pend'):'';
-  /* Sanitise remark — strip control chars, normalise quotes, trim whitespace */
-  var rawRemark =el('bri-'+idx)?el('bri-'+idx).value:'';
-  var remark    =rawRemark
-    .replace(/[\u0000-\u001F\u007F]/g,' ')  /* strip control chars */
-    .replace(/[\u2018\u2019]/g,"'")           /* curly single quotes → straight */
-    .replace(/[\u201C\u201D]/g,'"')           /* curly double quotes → straight */
-    .replace(/&/g,'and')                       /* & → and (safe for JSON + sheet) */
-    .replace(/</g,'(').replace(/>/g,')')       /* < > → brackets */
+  var taEl=el('bri-'+idx);
+  var rawRemark=taEl?taEl.value:'';
+  var remark=(function(s){
+    var out='';
+    for(var ci=0;ci<s.length;ci++){var cc=s.charCodeAt(ci);if(cc>31&&cc!==127)out+=s[ci];}
+    return out;
+  })(rawRemark)
+    .replace(/&/g,'and').replace(/</g,'(').replace(/>/g,')')
     .trim();
-  var rawDate   =el('brd-'+idx)?el('brd-'+idx).value:'';
-  var commitDate=rawDate?normaliseDate(rawDate):''; /* Always store as YYYY-MM-DD */
-  var status    =el('brs-'+idx)?el('brs-'+idx).value:'Open';
-  var bmDisplay =el('hdr-name')?el('hdr-name').textContent:currentUser;
-  if(!loanId){console.warn('saveBMRemark: no loanId found');return;}
-  /* Update local cache immediately so BM sees saved remark view right away */
+  var dateEl=el('brd-'+idx);
+  var commitDate=dateEl?normaliseDate(dateEl.value):'';
+  var selEl=el('brs-'+idx);
+  var status=selEl?selEl.value:'Open';
+  var bmDisplay=currentUser;
+  var hdrName=el('hdr-name');
+  if(hdrName)bmDisplay=hdrName.textContent||currentUser;
   _remarksCache[loanId]={remark:remark,commitDate:commitDate,status:status,bmUser:currentUser,bmDisplay:bmDisplay};
-  var payload={
+  if(btnEl)btnEl.setAttribute('data-saving-lid',loanId);
+  pushRemarkToSheet(loanId,{
     remark:remark,commitDate:commitDate,status:status,
     bmUser:currentUser,bmDisplay:bmDisplay,
     customerName:custName,dealerName:dealerName,
     pddAgeing:pddAge,pendency:pendency
-  };
-  /* Stamp loanId on button so onload can find it after re-render */
-  if(btnEl)btnEl.setAttribute('data-saving-lid',loanId);
-  /* NOTE: do NOT call renderTable() here — it would destroy the button before
-     the XHR fires. renderTable() is called inside pushRemarkToSheet.onload instead */
-  pushRemarkToSheet(loanId,payload,btnEl);
+  },btnEl);
 }
 
 /* ── EXPORT REMARKS CSV ── */
