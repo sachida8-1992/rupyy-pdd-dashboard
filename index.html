@@ -495,6 +495,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
                 <th onclick="sortTable('BM name')">BM &#8597;</th>
                 <th onclick="sortTable('Disb bank Name')">Bank &#8597;</th>
                 <th onclick="sortTable('product_type')">Product &#8597;</th>
+                <th onclick="sortTable('Loan Type')">Loan Type &#8597;</th>
                 <th onclick="sortTable('Disbursed Amount')">Disb Amt &#8597;</th>
                 <th onclick="sortTable('Rto Ops name')">RTO Ops Name &#8597;</th>
                 <th>RTO Ops Remark</th>
@@ -1781,7 +1782,8 @@ function sendBMEmails(){
           b: (r._bank||'').substring(0,20),
           m: r._amt||0,
           o: (r['RTO Ops Name']||r['Rto Ops name']||'').substring(0,15),
-          pt: (r['product_type']||'').substring(0,15)
+          pt: (r['product_type']||'').substring(0,15),
+          lt: (r['Loan Type']||'').substring(0,15)
         };
       })
     };
