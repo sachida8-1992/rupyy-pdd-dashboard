@@ -712,9 +712,9 @@ var donutChart=null,bankPieChart=null;
 var currentTab='cases';
 
 var AGEING_ORDER={'120 Days Above':6,'90 Days Above':5,'60 Days Above':4,'45 Days Above':3,'30 Days Above':2,'15 Days Above':1};
-var AGEING_COLORS={'120 Days Above':'#c0392b','90 Days Above':'#c05621','60 Days Above':'#d97706','45 Days Above':'#926800','30 Days Above':'#1a7a3c','15 Days Above':'#0891b2'};
-var AGEING_LABELS={'120 Days Above':'120D+','90 Days Above':'90D+','60 Days Above':'60D+','45 Days Above':'45D+','30 Days Above':'30D+','15 Days Above':'15D+'};
-var AGEING_KEYS=['120 Days Above','90 Days Above','60 Days Above','45 Days Above','30 Days Above','15 Days Above'];
+var AGEING_COLORS={'120 Days Above':'#c0392b','90 Days Above':'#c05621','60 Days Above':'#d97706','45 Days Above':'#926800','30 Days Above':'#1a7a3c','15 Days Above':'#0891b2','7 Days Above':'#64748b'};
+var AGEING_LABELS={'120 Days Above':'120D+','90 Days Above':'90D+','60 Days Above':'60D+','45 Days Above':'45D+','30 Days Above':'30D+','15 Days Above':'15D+','7 Days Above':'7D+'};
+var AGEING_KEYS=['120 Days Above','90 Days Above','60 Days Above','45 Days Above','30 Days Above','15 Days Above','7 Days Above'];
 var PENDENCY_PILLS=['All','No pending','Bank NOC','HPT mail','Buyer & Seller','Original Docs','Legal','Challan','Tax','To be Cancelled','Fitness pending','Others'];
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -1647,7 +1647,8 @@ function openMailModal(){
     {key:'60 Days Above', lbl:'60D+', col:'#d97706'},
     {key:'45 Days Above', lbl:'45D+', col:'#926800'},
     {key:'30 Days Above', lbl:'30D+', col:'#1a7a3c'},
-    {key:'15 Days Above', lbl:'15D+', col:'#0891b2'}
+    {key:'15 Days Above', lbl:'15D+', col:'#0891b2'},
+    {key:'7 Days Above',  lbl:'7D+',  col:'#64748b'}
   ];
   if(ageBox){
     ageBox.innerHTML = ageOpts.map(function(a){
