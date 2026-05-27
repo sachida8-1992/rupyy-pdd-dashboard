@@ -382,6 +382,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     <div class="header-right">
       <button class="upload-link-btn" id="upload-link-btn" onclick="openUpload()" style="display:none">&#8679; Upload Data</button>
       <button class="upload-link-btn" id="mail-bm-btn" onclick="openMailModal()" style="display:none;background:#1a7a3c">&#9993; Mail BMs</button>
+      <button class="upload-link-btn" id="rbnr-alert-btn" onclick="sendRBNRAlertFromDashboard()" style="display:none;background:#7c3aed">&#128680; RBNR Alerts</button>
       <div class="user-chip">
         <div class="user-avatar" id="hdr-avatar">A</div>
         <div class="user-name" id="hdr-name">User</div>
@@ -772,6 +773,7 @@ function doLogin(){
   var rt=el('hdr-role-tag');rt.textContent=role.toUpperCase();rt.className='user-role-tag role-'+role;
   el('upload-link-btn').style.display=role==='admin'?'inline-block':'none';
   el('mail-bm-btn').style.display=role==='rh'?'inline-block':'none';
+  el('rbnr-alert-btn').style.display=role==='rh'?'inline-block':'none';
   buildPills();buildStateFilter();buildBankAMFilter();
   switchTab('cases');
   logLogin('Login');
@@ -1831,6 +1833,30 @@ function sendBMEmails(){
   sendOneBM();
 }
 
+function sendRBNRAlertFromDashboard(){
+  var btn=el('rbnr-alert-btn');
+  if(!confirm('Send RBNR lapsed commitment reminders to AMs? Only cases where AM commitment date has passed will be included.'))return;
+  if(btn){btn.textContent='Sending\u2026';btn.disabled=true;btn.style.background='#5b21b6';}
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',GAS_URL+'?action=send_rbnr_alerts',true);
+  xhr.onload=function(){
+    var sent=0;
+    try{var resp=JSON.parse(xhr.responseText);sent=resp.sent||0;}catch(e){}
+    if(btn){
+      btn.textContent=sent>0?'\u2713 Sent to '+sent+' AM(s)':'\u2713 Done (no lapsed cases)';
+      btn.style.background='#1a7a3c';btn.disabled=false;
+      setTimeout(function(){btn.textContent='\u{1F514} RBNR Alerts';btn.style.background='#7c3aed';},4000);
+    }
+    if(sent>0)alert('RBNR lapsed reminders sent to '+sent+' AM(s). Check Email Log in Google Sheet.');
+    else alert('No lapsed RBNR commitment cases found today.');
+  };
+  xhr.onerror=function(){
+    if(btn){btn.textContent='\u26a0 Error';btn.disabled=false;btn.style.background='#c0392b';}
+    setTimeout(function(){btn.textContent='\u{1F514} RBNR Alerts';btn.style.background='#7c3aed';},3000);
+  };
+  xhr.send();
+}
+
 function exportCSV(){
   var cols=['Loan ID','Customer Name','Reg num','RTo code','Dealer Name','City','State','PDD Ageing (Days)','RC Age (Days)','Disbursed Amount','Actual pendnecy AM updated','BM name','AM Name','RH name','Disb bank Name','product_type','Latest RTO Ops Remarks'];
   var rows=[cols.join(',')];filteredData.forEach(function(r){rows.push(cols.map(function(c){return '"'+String(r[c]||'').replace(/"/g,'""')+'"';}).join(','));});
@@ -1905,10 +1931,11 @@ function fetchAndCacheAMRemarks(){
           var lid=String(row['Loan ID']||'').trim();
           if(!lid)return;
           _amRemarksCache[lid]={
-            remark:    row['Remark']||'',
-            updatedAt: row['Updated At (IST)']||'',
-            amUser:    row['AM User']||'',
-            amDisplay: row['AM Display Name']||''
+            remark:     row['Remark']||'',
+            commitDate: row['Commit Date']||'',
+            updatedAt:  row['Updated At (IST)']||'',
+            amUser:     row['AM User']||'',
+            amDisplay:  row['AM Display Name']||''
           };
         });
         if(currentTab==='cases')renderTable();
@@ -2085,6 +2112,7 @@ function getAMRemarkCell(loanId,idx,r){
   var saved=_amRemarksCache[loanId]||null;
   var isAM=(currentRole==='am');
   var remark=saved?saved.remark:'';
+  var commitDate=saved?normaliseDate(saved.commitDate):'';
   var today=todayIST();
 
   if(isAM){
@@ -2094,8 +2122,15 @@ function getAMRemarkCell(loanId,idx,r){
       savedView=
         '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:6px 8px">'+
         '<div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Saved</div>'+
-        '<div style="font-size:11px;color:var(--text);line-height:1.4;word-break:break-word">'+esc(saved.remark)+'</div>'+
-        (saved.updatedAt?'<div style="font-size:10px;color:var(--text3);margin-top:4px">'+esc(saved.updatedAt)+'</div>':'')+
+        '<div style="font-size:11px;color:var(--text);line-height:1.4;word-break:break-word">'+
+        (function(rm){
+          var cat=rm.match(/^\[([^\]]+)\]\s*/);
+          if(cat)return '<span style="background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;margin-right:4px">'+esc(cat[1])+'</span>'+esc(rm.replace(cat[0],''));
+          return esc(rm);
+        })(saved.remark)+
+        '</div>'+
+        (saved.commitDate?'<div style="display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap"><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">\u{1F4C5} '+esc(normaliseDate(saved.commitDate)||saved.commitDate)+'</span>'+getDaysHtml(saved.commitDate)+'</div>':'')+
+        (saved.updatedAt?'<div style="font-size:10px;color:var(--text3);margin-top:3px">Updated: '+esc(saved.updatedAt)+'</div>':'')+
         '</div>';
     }
     return '<td style="min-width:280px;vertical-align:top;padding:8px" '+
@@ -2112,8 +2147,11 @@ function getAMRemarkCell(loanId,idx,r){
         '<div style="width:1px;background:var(--border);align-self:stretch;flex-shrink:0;margin:0 2px"></div>'+
         '<div style="flex:1;min-width:0">'+
           '<div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Edit</div>'+
+          (r._pendency==='Original Docs'?'<div style="font-size:10px;color:var(--text2);margin-bottom:3px;font-weight:600">RBNR Category</div><select class="bm-status-sel" id="amrcat-'+idx+'" style="width:100%;margin-bottom:4px"><option value="">-- Select RBNR Category --</option><option value="RTO Charges is high">RTO Charges is high</option><option value="RTO Ops Not doing">RTO Ops Not doing</option><option value="Dealer Dont have Docs">Dealer Dont have Docs</option><option value="Dealer having deal complicacy">Dealer having deal complicacy</option><option value="Others reason">Others reason</option><option value="Doc submitted">Doc submitted</option><option value="NOC &amp; Link loan">NOC &amp; Link loan</option></select>':'')+
           '<textarea class="bm-remark-input" id="amri-'+idx+'" rows="3" placeholder="Add AM remark…" style="width:100%">'+esc(remark)+'</textarea>'+
-          '<button class="bm-save-btn" id="amrsb-'+idx+'" data-amrowidx="'+idx+'" onclick="saveAMRemark(this)" style="margin-top:4px;width:100%">Save &amp; Sync</button>'+
+          '<div style="font-size:10px;color:var(--text2);margin-top:5px;margin-bottom:2px;font-weight:600">Commitment Date</div>'+
+          '<input type="date" class="commit-date-input" id="amrd-'+idx+'" value="'+esc(commitDate)+'" min="'+todayIST()+'" style="width:100%;margin-bottom:4px">'+
+          '<button class="bm-save-btn" id="amrsb-'+idx+'" data-amrowidx="'+idx+'" onclick="saveAMRemark(this)" style="margin-top:2px;width:100%">Save &amp; Sync</button>'+
         '</div>'+
       '</div>'+
       '</td>';
@@ -2129,6 +2167,15 @@ function getAMRemarkCell(loanId,idx,r){
   }
 }
 
+function getDaysHtml(cd){
+  var d=normaliseDate(cd);
+  if(!d)return '';
+  var diff=daysFromToday(d);
+  if(diff===null)return '';
+  var dCls=diff===0?'days-today':diff<0?'days-overdue':diff<=2?'days-today':'days-upcoming';
+  return '<span class="days-badge '+dCls+'" style="font-size:10px">'+getDayLabel(diff)+'</span>';
+}
+
 function saveAMRemark(btnEl){
   var idx=btnEl.getAttribute('data-amrowidx');
   var td=btnEl.closest?btnEl.closest('[data-am-lid]'):null;
@@ -2138,6 +2185,9 @@ function saveAMRemark(btnEl){
 
   var taEl=el('amri-'+idx);
   var rawRemark=taEl?taEl.value:'';
+  /* Read RBNR category if present (Original Docs pendency) */
+  var rbnrCatEl=el('amrcat-'+idx);
+  var rbnrCat=rbnrCatEl?rbnrCatEl.value:'';
   /* Sanitise: remove control characters, normalise special quotes */
   var remark=(function(s){
     var out='';
@@ -2148,7 +2198,13 @@ function saveAMRemark(btnEl){
     .split('“').join('"').split('”').join('"')
     .replace(/&/g,'and').replace(/</g,'(').replace(/>/g,')')
     .trim();
-    if(!remark){alert('Please enter a remark before saving.');return;}
+  /* Read commitment date */
+  var amDateEl=el('amrd-'+idx);
+  var amCommitDate=amDateEl?normaliseDate(amDateEl.value):'';
+  /* Prepend RBNR category if selected */
+  if(rbnrCat) remark = '[RBNR: '+rbnrCat+'] '+(remark||'');
+  remark = remark.trim();
+  if(!remark){alert('Please enter a remark before saving.');return;}
 
   /* AM display name */
   var amDisplay=currentUser;
@@ -2157,11 +2213,12 @@ function saveAMRemark(btnEl){
 
   /* Update local cache immediately */
   var nowStr=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-  _amRemarksCache[loanId]={remark:remark,updatedAt:nowStr,amUser:currentUser,amDisplay:amDisplay};
+  _amRemarksCache[loanId]={remark:remark,commitDate:amCommitDate,updatedAt:nowStr,amUser:currentUser,amDisplay:amDisplay};
 
   if(btnEl)btnEl.setAttribute('data-saving-am-lid',loanId);
   pushAMRemarkToSheet(loanId,{
     remark:remark,amUser:currentUser,amDisplay:amDisplay,
+    commitDate:amCommitDate,
     customerName:td.getAttribute('data-am-cust')||'',
     dealerName:td.getAttribute('data-am-dealer')||'',
     pddAgeing:td.getAttribute('data-am-age')||'',
@@ -2175,6 +2232,7 @@ function pushAMRemarkToSheet(loanId,data,btnEl){
     type:'save_am_remark',
     loanId:loanId,
     remark:data.remark,
+    commitDate:data.commitDate||'',
     amUser:data.amUser,
     amDisplay:data.amDisplay,
     customerName:data.customerName,
