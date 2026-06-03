@@ -776,13 +776,12 @@ function doLogin(){
   if(!email){errEl.textContent='Please enter your email ID.';errEl.style.display='block';return;}
 
   /* Detect role from email */
-  var role='bm'; /* default */
-  if(email===ADMIN_EMAIL||pwd===ADMIN_PASS){role='admin';}
-  else if(DATA.some(function(r){return(r['AM Name']||'').toLowerCase()===email;})){role='am';}
-  else if(DATA.some(function(r){return(r._rhLower===email.split('@')[0].toLowerCase()||
-    (r['RH']||'').toLowerCase()===email);})){role='rh';}
-  /* BM: email matches BM name in data */
-  /* else stays 'bm' */
+  var role='bm';
+  var isRH=DATA.some(function(r){var rh=(r['RH']||'').trim().toLowerCase();return rh===email||rh===email.split('@')[0];});
+  var isAM=DATA.some(function(r){return(r['AM Name']||'').trim().toLowerCase()===email;});
+  if(isRH){role='rh';}
+  else if(isAM){role='am';}
+  else if(email===ADMIN_EMAIL){role='admin';}
 
   /* Validate password */
   var expectedPwd = (role==='admin') ? ADMIN_PASS : getUserPwd(email);
@@ -799,8 +798,8 @@ function doLogin(){
   el('hdr-name').textContent=dn;
   var rt=el('hdr-role-tag');rt.textContent=role.toUpperCase();rt.className='user-role-tag role-'+role;
   el('upload-link-btn').style.display=role==='admin'?'inline-block':'none';
-  el('mail-bm-btn').style.display=role==='rh'?'inline-block':'none';
-  el('rbnr-alert-btn').style.display=role==='rh'?'inline-block':'none';
+  el('mail-bm-btn').style.display=(role==='rh'||role==='admin')?'inline-block':'none';
+  el('rbnr-alert-btn').style.display=(role==='rh'||role==='admin')?'inline-block':'none';
   buildPills();buildStateFilter();buildBankAMFilter();
   switchTab('cases');
   logLogin('Login');
@@ -1226,7 +1225,7 @@ function refreshAll(){
     if(rbnrCard)rbnrCard.style.display=showRBNR?'block':'none';
     if(showRBNR){buildRBNRFilter();buildRBNRSummary();}
   } else {
-    /* RH, AM: show span cards on top page */
+    /* RH, AM, Admin: show span cards on top page */
     if(spanSec)spanSec.style.display='block';
     if(bmSummary)bmSummary.style.display='none';
     buildSpanView();
