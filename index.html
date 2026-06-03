@@ -1219,6 +1219,11 @@ function refreshAll(){
     buildSpanView();
     if(amAgeFilter)amAgeFilter.style.display='block';
     buildAMAgeing();
+    /* Show RBNR filter for RH/AM */
+    var rbnrRow2=el('rbnr-filter-row');var rbnrCard2=el('rbnr-summary-card');
+    if(rbnrRow2)rbnrRow2.style.display='flex';
+    if(rbnrCard2)rbnrCard2.style.display='block';
+    buildRBNRFilter();buildRBNRSummary();
   }
   /* Show/hide remarks tab based on role */
   var tabReminders=el('tab-reminders');
