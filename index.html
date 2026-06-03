@@ -359,14 +359,10 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
   <div class="login-box">
     <div class="login-logo">RUPYY OPS</div>
     <div class="login-title">PDD Pending<br>Dashboard</div>
-    <div class="login-sub">Select your name and enter your password</div>
     <div class="login-error" id="login-error"></div>
-    <label class="login-label">Your Name / Role</label>
-    <select class="login-select" id="role-select" onchange="updateRoleBadge()">
-      <option value="">-- Select name / role --</option>
-    </select>
-    <label class="login-label">Password</label>
-    <input class="login-input" id="pwd-input" type="password" placeholder="" autocomplete="off">
+    <input class="login-input" id="email-input" type="email" placeholder="" autocomplete="off" onkeydown="if(event.key==='Enter')el('pwd-input').focus()">
+    <select style="display:none" id="role-select"><option value=""></option></select>
+    <input class="login-input" id="pwd-input" type="password" placeholder="" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <div id="pwd-hint" style="display:none"></div>
     <br><br>
     <button class="login-btn" onclick="doLogin()">Access Dashboard &rarr;</button>
@@ -719,6 +715,7 @@ function rebuildUserLists(){
 rebuildUserLists();
 
 var ADMIN_PASS='1986';
+var ADMIN_EMAIL='sachidananda.panigrahy@rupyy.com';
 var currentUser=null,currentRole=null;
 var drillAM=null,drillBM=null,amDrillBM=null;
 var filteredData=[],sortCol='RC Age (Days)',sortAsc=false;
@@ -741,18 +738,21 @@ function getRCls(a){return {'120 Days Above':'row-120','90 Days Above':'row-90',
 function getSCls(a){return {'120 Days Above':'seg-120','90 Days Above':'seg-90','60 Days Above':'seg-60','45 Days Above':'seg-45','30 Days Above':'seg-30','15 Days Above':'seg-15'}[a]||'';}
 function getPrio(r){var s=r._age;if(r._pendency&&r._pendency!=='No pending')s+=50;if(r._pendency==='Legal'||r._pendency==='To be Cancelled')s+=30;return s>250?'p-critical':s>150?'p-high':s>80?'p-medium':'p-low';}
 /* Employee code map — password = emp code */
-var EMP_CODES={"raju patra": "10067906", "lucky gulati": "10070814", "dhruba jyoti parasar": "10070890", "akramuz zaman": "10059044", "prasanta konwar": "10059046", "rosan kumar sahoo": "10059066", "p kanteswar swamy": "10063894", "seraj ahmed": "10071597", "iftikar hussain": "10071618", "nitish kumar dash": "10071629", "sabir husain hazarika": "10071818", "pawan yadav": "10071856", "shivraj paul": "10072053", "aman kumar": "10072848", "mukesh kumar ojha": "10072916", "abhijit dey": "10072786", "swadhin jena": "10072789", "md aminul haque": "10072811", "sanjib kumar nag": "10072976", "jiyareja akhtar": "10073093", "dipankar choudhury": "10073191", "shantanu ghosh": "10073355", "yogender shukla": "10073521", "anish khan": "10073614", "adityanarayan sahoo": "10073663", "binay kumar sharma": "10074186", "sidhartha verma": "10074327", "suswagata biswas": "10074329", "kunal kumar": "10074393", "josef dey": "10074441", "jawed hussain ansari": "10074456", "gourav ojha": "10074501", "md aquib hussain": "10074679", "sarada prasanna nayak": "10074687", "sachidananda panigrahy": "1986"};
+var EMP_CODES={"raju.patra@rupyy.com": "10067906", "lucky.gulati@rupyy.com": "10070814", "dhruba.parasar@rupyy.com": "10070890", "akramuz.zaman@rupyy.com": "10059044", "prasanta.konwar@rupyy.com": "10059046", "rosan.sahoo@rupyy.com": "10059066", "p.swamy@rupyy.com": "10063894", "seraj.ahmed@rupyy.com": "10071597", "iftikar.hussain@rupyy.com": "10071618", "nitish.dash@rupyy.com": "10071629", "sabir.hazarika@rupyy.com": "10071818", "pawan.yadav@rupyy.com": "10071856", "shivraj.paul@rupyy.com": "10072053", "aman.kumar@rupyy.com": "10072848", "mukesh.ojha@rupyy.com": "10072916", "abhijit.dey@rupyy.com": "10072786", "swadhin.jena@rupyy.com": "10072789", "md.haque@rupyy.com": "10072811", "sanjib.nag@rupyy.com": "10072976", "jiyareja.akhtar@rupyy.com": "10073093", "dipankar.choudhury@rupyy.com": "10073191", "shantanu.ghosh@rupyy.com": "10073355", "yogender.shukla@rupyy.com": "10073521", "anish.khan@rupyy.com": "10073614", "adityanarayan.sahoo@rupyy.com": "10073663", "binay.sharma@rupyy.com": "10074186", "sidhartha.verma@rupyy.com": "10074327", "sushwagat.biswas@rupyy.com": "10074329", "kunal.kumar@rupyy.com": "10074393", "josef.dey1@rupyy.com": "10074441", "jawed.ansari@rupyy.com": "10074456", "aquib.hussain@rupyy.com": "10074679", "dharmendra.singh1@rupyy.com": "10075182", "sumeet.prasad@rupyy.com": "10075240", "sujit.mohanty@rupyy.com": "10075216", "nishikant.singh@rupyy.com": "10075211", "ajay.konwar@rupyy.com": "10075051", "yash.sharma@rupyy.com": "10075200", "sachidananda.panigrahy@rupyy.com": "1986", "sudarshan.medhi@rupyy.com": "10074757"};
 function getUserPwd(u){
-  /* Try matching by display name (lowercase) */
-  var name=u.indexOf('@')>-1?u.split('@')[0]:u;
-  /* normalise: replace dots/underscores with space, lowercase */
-  var nameNorm=name.replace(/[._]/g,' ').trim().toLowerCase();
-  if(EMP_CODES[nameNorm])return String(EMP_CODES[nameNorm]);
-  /* Try full u as name (for RH/BM stored as plain name) */
+  /* Primary: try full email (e.g. rosan.sahoo@rupyy.com) */
   var uLow=u.trim().toLowerCase();
   if(EMP_CODES[uLow])return String(EMP_CODES[uLow]);
-  /* fallback: first 4 chars (legacy) */
-  return nameNorm.replace(/\s/g,'').substring(0,4);
+  /* Secondary: try email prefix without domain (e.g. rosan.sahoo) */
+  var prefix=u.indexOf('@')>-1?u.split('@')[0].trim().toLowerCase():uLow;
+  /* Check if any key ends with the prefix */
+  var keys=Object.keys(EMP_CODES);
+  for(var ki=0;ki<keys.length;ki++){
+    var k=keys[ki];
+    if(k.indexOf('@')>-1&&k.split('@')[0]===prefix)return String(EMP_CODES[k]);
+  }
+  /* No match */
+  return '';
 }
 function el(id){return document.getElementById(id);}
 function countAge(data,key){return data.filter(function(r){return r['PDD Ageing (Days)']==key;}).length;}
@@ -766,24 +766,36 @@ function initLogin(){
   AMS.forEach(function(am){var o=document.createElement('option');o.value='am|'+am;var lbl=am.indexOf('@')>-1?am.split('@')[0]:am;o.textContent='AM: '+lbl;rs.appendChild(o);});
   BMS.forEach(function(bm){var o=document.createElement('option');o.value='bm|'+bm;var lbl=bm.indexOf('@')>-1?bm.split('@')[0]:bm;o.textContent='BM: '+lbl;rs.appendChild(o);});
 }
-function updateRoleBadge(){
-  var val=el('role-select').value;
-  el('login-error').style.display='none';
-}
+function updateRoleBadge(){el('login-error').style.display='none';}
 function doLogin(){
-  var val=el('role-select').value;var pwd=el('pwd-input').value.trim().toLowerCase();
+  var emailEl=el('email-input');
+  var email=(emailEl?emailEl.value:'').trim().toLowerCase();
+  var pwd=el('pwd-input').value.trim();
   var errEl=el('login-error');errEl.style.display='none';
-  if(!val){errEl.textContent='Please select your name first.';errEl.style.display='block';return;}
-  var parts=val.split('|');var role=parts[0];var user=parts.slice(1).join('|');
-  if(role==='admin'){if(pwd!==ADMIN_PASS){errEl.textContent='Incorrect admin password.';errEl.style.display='block';return;}}
-  else{if(pwd!==getUserPwd(user)){errEl.textContent='Incorrect password. Please enter your employee code.';errEl.style.display='block';return;}}
-  currentRole=role;currentUser=user;
-  drillAM=null;drillBM=null;amDrillBM=null;activeAgeings=[];activePills=[];
-  el('pwd-input').value='';
+
+  if(!email){errEl.textContent='Please enter your email ID.';errEl.style.display='block';return;}
+
+  /* Detect role from email */
+  var role='bm'; /* default */
+  if(email===ADMIN_EMAIL||pwd===ADMIN_PASS){role='admin';}
+  else if(DATA.some(function(r){return(r['AM Name']||'').toLowerCase()===email;})){role='am';}
+  else if(DATA.some(function(r){return(r._rhLower===email.split('@')[0].toLowerCase()||
+    (r['RH']||'').toLowerCase()===email);})){role='rh';}
+  /* BM: email matches BM name in data */
+  /* else stays 'bm' */
+
+  /* Validate password */
+  var expectedPwd = (role==='admin') ? ADMIN_PASS : getUserPwd(email);
+  if(!expectedPwd){errEl.textContent='Email not found. Please check your email ID.';errEl.style.display='block';return;}
+  if(pwd!==expectedPwd){errEl.textContent='Incorrect password. Please enter your employee code.';errEl.style.display='block';return;}
+
+  currentRole=role;currentUser=email;
+  drillAM=null;drillBM=null;amDrillBM=null;activeAgeings=[];activePills=[];activeRBNR='';
+  el('pwd-input').value='';if(emailEl)emailEl.value='';
   el('login-screen').style.display='none';el('dashboard').style.display='block';
-  var initials=user.replace('@rupyy.com','').replace(/[._]/g,' ').trim().split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+  var initials=email.split('@')[0].replace(/[._]/g,' ').trim().split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
   el('hdr-avatar').textContent=initials||'U';
-  var dn=user.indexOf('@')>-1?user.split('@')[0].replace(/[._]/g,' '):user;
+  var dn=email.split('@')[0].replace(/[._]/g,' ');
   el('hdr-name').textContent=dn;
   var rt=el('hdr-role-tag');rt.textContent=role.toUpperCase();rt.className='user-role-tag role-'+role;
   el('upload-link-btn').style.display=role==='admin'?'inline-block':'none';
@@ -1822,7 +1834,9 @@ function sendBMEmails(){
           m: r._amt||0,
           o: (r['RTO Ops Name']||r['Rto Ops name']||'').substring(0,15),
           pt: (r['product_type']||'').substring(0,15),
-          lt: (r['Loan Type']||'').substring(0,15)
+          lt: (r['Loan Type']||'').substring(0,15),
+          brem: (function(){var s=_remarksCache[String(r['Loan ID']||'').trim()];return s?s.remark.substring(0,60):'';})(),
+          bcd:  (function(){var s=_remarksCache[String(r['Loan ID']||'').trim()];return s?normaliseDate(s.commitDate):'';})()
         };
       })
     };
