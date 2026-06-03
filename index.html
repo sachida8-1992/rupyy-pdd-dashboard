@@ -3,6 +3,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- Build: 2026-06-03 15:38 -->
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>RTO PDD Pending Dashboard &mdash; Rupyy Ops</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -472,10 +476,10 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
         <div class="am-ageing-btns" id="am-ageing-btns"></div>
       </div>
       <div class="filters-row">
-        <input class="search-box" id="search-box" placeholder="Search loan ID, customer, reg, dealer, bank..." oninput="applyFilters()">
+        <input class="search-box" id="search-box" placeholder="Search loan ID, customer, reg, dealer, bank..." oninput="applyFilters()" autocomplete="off">
         <select class="filter-select" id="state-filter" onchange="applyFilters()"><option value="">All States</option></select>
-        <input class="search-box" id="bank-search-filter" style="flex:0;min-width:140px" placeholder="Filter by bank..." oninput="applyFilters()">
-        <input class="search-box" id="product-search-filter" style="flex:0;min-width:130px" placeholder="Filter by product..." oninput="applyFilters()">
+        <input class="search-box" id="bank-search-filter" style="flex:0;min-width:140px" placeholder="Filter by bank..." autocomplete="off" oninput="applyFilters()">
+        <input class="search-box" id="product-search-filter" autocomplete="off" style="flex:0;min-width:130px" placeholder="Filter by product..." oninput="applyFilters()">
         <button class="reset-btn" onclick="resetFilters()">Reset</button>
         <button class="export-btn" onclick="exportCSV()">&#8595; CSV</button>
       </div>
@@ -794,6 +798,9 @@ function doLogin(){
   el('mail-bm-btn').style.display=(role==='rh'||role==='admin')?'inline-block':'none';
   el('rbnr-alert-btn').style.display=(role==='rh'||role==='admin')?'inline-block':'none';
   buildPills();buildStateFilter();buildBankAMFilter();
+  var sb=el('search-box');if(sb)sb.value='';
+  var bf=el('bank-search-filter');if(bf)bf.value='';
+  var pf=el('product-search-filter');if(pf)pf.value='';
   switchTab('cases');
   logLogin('Login');
   refreshAll();
