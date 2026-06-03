@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+<!DOC
+      YPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -479,20 +480,20 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
         <button class="export-btn" onclick="exportCSV()">&#8595; CSV</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div class="pills-row" id="pills-row" style="margin-bottom:0;flex:1"></div><span id="pills-count" style="font-size:11px;color:var(--accent);font-weight:600;white-space:nowrap"></span></div>
-      <!-- RBNR filter row — RH and AM only -->
-      <div id="rbnr-filter-row" style="display:none;margin-bottom:12px;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap">RBNR Filter:</span>
-        <div id="rbnr-pills-row" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-      </div>
-      <!-- RBNR Summary table — RH and AM only -->
-      <div id="rbnr-summary-card" style="display:none;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-bottom:14px;overflow:hidden">
-        <div style="padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:12px;font-weight:700;color:var(--text)">&#128203; RBNR Category Summary — Original Docs Cases</span>
+
+            <!-- RBNR Summary & Filter — RH and AM only -->
+      <div id="rbnr-summary-card" style="display:none;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-bottom:10px;overflow:hidden">
+        <div style="padding:9px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:12px;font-weight:700;color:var(--text)">&#128203; RBNR Breakdown — Original Docs</span>
           <span id="rbnr-total-chip" style="font-size:11px;color:var(--text2);font-family:var(--mono)"></span>
         </div>
-        <div id="rbnr-summary-body" style="padding:10px 16px 12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+        <div id="rbnr-summary-body" style="padding:8px 16px 10px;display:flex;gap:8px;flex-wrap:wrap"></div>
       </div>
-      <div class="table-card">
+      <div id="rbnr-filter-row" style="display:none;margin-bottom:10px;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap">RBNR:</span>
+        <div id="rbnr-pills-row" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+<div class="table-card">
         <div class="table-header-row"><div class="table-count" id="table-count">Showing 0 cases</div></div>
         <div class="table-wrap">
           <table class="main-tbl">
