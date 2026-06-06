@@ -594,6 +594,37 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
           <button class="export-btn" onclick="exportRemarksCSV()">&#8595; Export Remarks CSV</button>
         </div>
       </div>
+      <!-- BM Pendency Summary — RH only -->
+      <div id="bm-pendency-summary" style="display:none;margin-bottom:20px">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden">
+          <div style="padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <span style="font-size:13px;font-weight:700;color:var(--text)">&#128101; BM-wise Pendency Summary</span>
+            <span style="font-size:11px;color:var(--text3)">Click BM row to filter cases below</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead>
+                <tr style="background:var(--primary);color:#fff">
+                  <th style="padding:8px 10px;text-align:left;white-space:nowrap">BM Name</th>
+                  <th style="padding:8px 10px;text-align:center;white-space:nowrap">Total</th>
+                  <th style="padding:8px 10px;text-align:center;background:#c0392b;white-space:nowrap">120D+</th>
+                  <th style="padding:8px 10px;text-align:center;background:#c05621;white-space:nowrap">90D+</th>
+                  <th style="padding:8px 10px;text-align:center;background:#d97706;white-space:nowrap">60D+</th>
+                  <th style="padding:8px 10px;text-align:center;background:#926800;white-space:nowrap">45D+</th>
+                  <th style="padding:8px 10px;text-align:center;background:#1a7a3c;white-space:nowrap">30D+</th>
+                  <th style="padding:8px 10px;text-align:center;background:#0891b2;white-space:nowrap">15D+</th>
+
+                  <th style="padding:8px 10px;text-align:center;white-space:nowrap;color:#c0392b">No Remark</th>
+                  <th style="padding:8px 10px;text-align:center;white-space:nowrap;color:#c0392b">Expired</th>
+                  <th style="padding:8px 10px;text-align:left;white-space:nowrap">Last Updated</th>
+                </tr>
+              </thead>
+              <tbody id="bm-pendency-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px" id="reminder-day-grid"></div>
       <div class="table-card" id="reminder-detail-card" style="display:none">
         <div class="table-header-row">
@@ -2068,6 +2099,7 @@ function fetchAndCacheAMRemarks(){
           };
         });
         if(currentTab==='cases'){renderTable();if(currentRole==='rh'||currentRole==='am'||currentRole==='admin'){buildRBNRFilter();buildRBNRSummary();}}
+        if(currentTab==='reminders')buildBMPendencySummary();
       }
     }catch(e){}
   };
@@ -2776,6 +2808,92 @@ function buildRemBMTable(data,hint,onClickBM){
   return wrap;
 }
 
+
+function buildBMPendencySummary(){
+  var wrap=el('bm-pendency-summary');
+  var tbody=el('bm-pendency-body');
+  if(!wrap||!tbody)return;
+
+  /* Only show for RH/Admin */
+  var show=(currentRole==='rh'||currentRole==='admin');
+  wrap.style.display=show?'block':'none';
+  if(!show)return;
+
+  var myData=getMyData();
+  var today=new Date(); today.setHours(0,0,0,0);
+
+  /* Group by BM */
+  var bmMap={};
+  myData.forEach(function(r){
+    var bm=r._bm||'Unassigned';
+    if(!bmMap[bm])bmMap[bm]={total:0,a120:0,a90:0,a60:0,a45:0,a30:0,a15:0,a7:0,noRemark:0,expired:0,lastUpdate:''};
+    var m=bmMap[bm];
+    m.total++;
+    var ag=r['PDD Ageing (Days)']||'';
+    if(ag==='120 Days Above')m.a120++;
+    else if(ag==='90 Days Above')m.a90++;
+    else if(ag==='60 Days Above')m.a60++;
+    else if(ag==='45 Days Above')m.a45++;
+    else if(ag==='30 Days Above')m.a30++;
+    else if(ag==='15 Days Above')m.a15++;
+    else if(ag==='7 Days Above')m.a7++;
+
+    var lid=String(r['Loan ID']||'').trim();
+    var saved=_remarksCache[lid]||null;
+    if(!saved||!saved.remark||!saved.remark.trim()){
+      m.noRemark++;
+    } else {
+      /* Check timeline expired */
+      var cd=saved.commitDate?normaliseDate(saved.commitDate):null;
+      if(cd&&cd<today) m.expired++;
+      /* Track last update */
+      if(saved.updatedAt){
+        if(!m.lastUpdate||saved.updatedAt>m.lastUpdate) m.lastUpdate=saved.updatedAt;
+      }
+    }
+  });
+
+  /* Sort by total desc */
+  var bms=Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;});
+
+  if(!bms.length){tbody.innerHTML='<tr><td colspan="12" style="padding:12px;text-align:center;color:var(--text3)">No data</td></tr>';return;}
+
+  tbody.innerHTML=bms.map(function(bm){
+    var m=bmMap[bm];
+    var lbl=bm.indexOf('@')>-1?bm.split('@')[0].replace(/[._]/g,' '):bm;
+    var noRemStyle=m.noRemark>0?'color:#c0392b;font-weight:700':'color:var(--text3)';
+    var expStyle=m.expired>0?'color:#c0392b;font-weight:700':'color:var(--text3)';
+    var lastUpd=m.lastUpdate?m.lastUpdate.substring(0,16):'<span style="color:#aaa">—</span>';
+
+    return '<tr style="border-bottom:1px solid var(--border);cursor:pointer" '+
+      'onmouseover="this.style.background=\'#f8fafc\'" '+
+      'onmouseout="this.style.background=\'\'" '+
+      'onclick="filterRemindersByBM(\"'+esc(bm)+'\")">' +
+      '<td style="padding:7px 10px;font-weight:600;color:var(--text)">'+esc(lbl)+'</td>'+
+      '<td style="padding:7px 10px;text-align:center;font-weight:700;font-family:var(--mono)">'+m.total+'</td>'+
+      '<td style="padding:7px 10px;text-align:center;color:#c0392b;font-family:var(--mono)">'+(m.a120||'—')+'</td>'+
+      '<td style="padding:7px 10px;text-align:center;color:#c05621;font-family:var(--mono)">'+(m.a90||'—')+'</td>'+
+      '<td style="padding:7px 10px;text-align:center;color:#d97706;font-family:var(--mono)">'+(m.a60||'—')+'</td>'+
+      '<td style="padding:7px 10px;text-align:center;color:#926800;font-family:var(--mono)">'+(m.a45||'—')+'</td>'+
+      '<td style="padding:7px 10px;text-align:center;color:#1a7a3c;font-family:var(--mono)">'+(m.a30||'—')+'</td>'+
+      '<td style="padding:7px 10px;text-align:center;color:#0891b2;font-family:var(--mono)">'+(m.a15||'—')+'</td>'+
+
+      '<td style="padding:7px 10px;text-align:center;'+noRemStyle+'">'+m.noRemark+'</td>'+
+      '<td style="padding:7px 10px;text-align:center;'+expStyle+'">'+m.expired+'</td>'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--text3)">'+lastUpd+'</td>'+
+      '</tr>';
+  }).join('');
+}
+
+function filterRemindersByBM(bm){
+  var sel=el('rem-bm-filter');
+  if(!sel)return;
+  sel.value=bm;
+  renderReminders();
+  /* Scroll to reminder buckets */
+  var grid=el('reminder-day-grid');
+  if(grid)grid.scrollIntoView({behavior:'smooth',block:'start'});
+}
 
 function renderReminders(){
   renderReminderStats();
