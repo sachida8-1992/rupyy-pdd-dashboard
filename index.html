@@ -2134,7 +2134,7 @@ function fetchAndCacheRemarks(){
       }
       /* Re-render whatever tab is currently active */
       if(currentTab==='cases')renderTable();
-      if(currentTab==='reminders'){buildReminderFilters();renderReminderStats();renderReminders();}
+      if(currentTab==='reminders'){buildBMPendencySummary();buildReminderFilters();renderReminderStats();renderReminders();}
       /* Refresh span tables when remarks update (only if on reminders tab) */
       if(currentTab==='reminders'&&(currentRole==='rh'||currentRole==='am'||currentRole==='admin')){buildSpanView();}
       if(currentTab==='bank'){renderBankCharts(filteredData.length?filteredData:getMyData());renderBankTable();}
@@ -2676,11 +2676,12 @@ function renderReminderStats(){
 
 /* Build AM summary table for RH/Admin in reminders */
 function buildRemAMTable(scopeData){
+  var today=new Date();today.setHours(0,0,0,0);
   var amMap={};
   scopeData.forEach(function(r){
     var am=r._am||'(Unassigned)';
     var lbl=am.indexOf('@')>-1?am.split('@')[0]:am;
-    if(!amMap[am])amMap[am]={lbl:lbl,total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+    if(!amMap[am])amMap[am]={lbl:lbl,email:am,total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0,expired:0};
     amMap[am].total++;
     var ag=r['PDD Ageing (Days)'];
     if(ag===AGEING_KEYS[0])amMap[am].p120++;
@@ -2691,17 +2692,26 @@ function buildRemAMTable(scopeData){
     else if(ag==='15 Days Above')amMap[am].p15++;
     var lid=String(r['Loan ID']||'').trim();
     var saved=_remarksCache[lid];
-    if(saved&&saved.remark)amMap[am].remDone++;else amMap[am].remPend++;
+    if(saved&&saved.remark){
+      amMap[am].remDone++;
+      var cd=saved.commitDate?normaliseDate(saved.commitDate):null;
+      if(cd&&cd<today)amMap[am].expired++;
+    } else amMap[am].remPend++;
   });
   var ams=Object.keys(amMap).sort(function(a,b){return amMap[b].total-amMap[a].total;});
-  var tot={total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0};
+  var tot={total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0,expired:0};
   var rows='';
   ams.forEach(function(am){
     var s=amMap[am];
-    Object.keys(tot).forEach(function(k){tot[k]+=s[k];});
+    Object.keys(tot).forEach(function(k){if(k in s)tot[k]+=s[k];});
     var pct=s.total>0?Math.round(s.remDone/s.total*100):0;
-    rows+='<tr>'+
-      '<td class="name-cell">'+esc(s.lbl)+'</td>'+
+    var expStyle=s.expired>0?'color:#c0392b;font-weight:700':'color:var(--text3)';
+    rows+='<tr style="cursor:pointer" data-am-email="'+esc(am)+'" '+
+      'onclick="toggleRemAMBMDrill(this)" '+
+      'title="Click to see BM breakdown">'+
+      '<td class="name-cell" style="display:flex;align-items:center;gap:5px">'+
+        '<span style="font-size:11px;color:var(--text3)">&#9654;</span>'+esc(s.lbl)+
+      '</td>'+
       '<td class="center">'+s.total+'</td>'+
       '<td class="center"><span class="age-pill ap120">'+s.p120+'</span></td>'+
       '<td class="center"><span class="age-pill ap90">'+s.p90+'</span></td>'+
@@ -2711,16 +2721,23 @@ function buildRemAMTable(scopeData){
       '<td class="center"><span class="age-pill ap15">'+s.p15+'</span></td>'+
       '<td class="center"><span class="rem-done">'+s.remDone+'</span><span class="rem-pct">'+pct+'%</span></td>'+
       '<td class="center"><span class="rem-pend">'+s.remPend+'</span></td>'+
+      '<td class="center" style="'+expStyle+'">'+s.expired+'</td>'+
+      '</tr>'+
+      '<tr class="am-bm-drill-row" id="am-drill-'+am.replace(/[@.]/g,'-')+'" style="display:none">'+
+        '<td colspan="11" style="padding:0;background:var(--surface2)"></td>'+
       '</tr>';
   });
   var pctTot=tot.total>0?Math.round(tot.remDone/tot.total*100):0;
+  var expTotStyle=tot.expired>0?'color:#c0392b;font-weight:700':'';
   var wrap=document.createElement('div');wrap.className='table-card';
-  wrap.innerHTML='<div class="span-table-wrap"><table class="span-tbl">'+
+  /* Store scopeData reference for drill */
+  wrap._scopeData=scopeData;
+  wrap.innerHTML='<div class="span-table-wrap"><table class="span-tbl" id="rem-am-tbl">'+
     '<thead><tr>'+
-      '<th>AM Name</th><th class="center">Total</th>'+
+      '<th>AM Name <span style="font-size:10px;color:rgba(255,255,255,.6)">(click to expand BMs)</span></th><th class="center">Total</th>'+
       '<th class="center">120D+</th><th class="center">90D+</th><th class="center">60D+</th>'+
       '<th class="center">45D+</th><th class="center">30D+</th><th class="center">15D+</th>'+
-      '<th class="center">Remarks Done</th><th class="center">Rem Pending</th>'+
+      '<th class="center">Remarks Done</th><th class="center">Rem Pending</th><th class="center" style="color:#ffb3b3">Expired</th>'+
     '</tr></thead>'+
     '<tbody>'+rows+'</tbody>'+
     '<tfoot><tr>'+
@@ -2734,8 +2751,108 @@ function buildRemAMTable(scopeData){
       '<td class="center"><span class="age-pill ap15">'+tot.p15+'</span></td>'+
       '<td class="center"><span class="rem-done">'+tot.remDone+'</span><span class="rem-pct">'+pctTot+'%</span></td>'+
       '<td class="center"><span class="rem-pend">'+tot.remPend+'</span></td>'+
+      '<td class="center" style="'+expTotStyle+'">'+tot.expired+'</td>'+
     '</tr></tfoot>'+
     '</table></div>';
+  /* onclick uses data-am-email attr — no patch needed */
+  return wrap;
+}
+
+function toggleRemAMBMDrill(row){
+  var amEmail=row.getAttribute('data-am-email');
+  if(!amEmail)return;
+  /* Find scopeData from parent table's card */
+  var card=row.closest('.table-card');
+  var scopeData=card&&card._scopeData?card._scopeData:DATA;
+  var drillId='am-drill-'+amEmail.replace(/[@.]/g,'-');
+  var drillRow=document.getElementById(drillId);
+  if(!drillRow)return;
+  var isOpen=drillRow.style.display!=='none';
+  /* Close all others first */
+  document.querySelectorAll('.am-bm-drill-row').forEach(function(r){
+    r.style.display='none';
+    var arrow=r.previousElementSibling&&r.previousElementSibling.querySelector('span');
+    if(arrow)arrow.textContent='\u25B6';
+  });
+  var arrow=row.querySelector('span');
+  if(isOpen){
+    if(arrow)arrow.textContent='\u25B6';
+    return;
+  }
+  /* Build BM table for this AM */
+  var amData=scopeData.filter(function(r){return (r._am||'')=== amEmail;});
+  var bmTable=buildRemBMTableInline(amData);
+  var td=drillRow.querySelector('td');
+  if(td){td.innerHTML='';td.appendChild(bmTable);}
+  drillRow.style.display='';
+  if(arrow)arrow.textContent='\u25BC';
+}
+
+function buildRemBMTableInline(amData){
+  var today=new Date();today.setHours(0,0,0,0);
+  var bmMap={};
+  amData.forEach(function(r){
+    var bm=r._bm||'Unassigned';
+    var lbl=bm.indexOf('@')>-1?bm.split('@')[0].replace(/[._]/g,' '):bm;
+    if(!bmMap[bm])bmMap[bm]={lbl:lbl,total:0,p120:0,p90:0,p60:0,p45:0,p30:0,p15:0,remDone:0,remPend:0,expired:0,lastUpdate:''};
+    bmMap[bm].total++;
+    var ag=r['PDD Ageing (Days)'];
+    if(ag==='120 Days Above')bmMap[bm].p120++;
+    else if(ag==='90 Days Above')bmMap[bm].p90++;
+    else if(ag==='60 Days Above')bmMap[bm].p60++;
+    else if(ag==='45 Days Above')bmMap[bm].p45++;
+    else if(ag==='30 Days Above')bmMap[bm].p30++;
+    else if(ag==='15 Days Above')bmMap[bm].p15++;
+    var lid=String(r['Loan ID']||'').trim();
+    var saved=_remarksCache[lid];
+    if(saved&&saved.remark){
+      bmMap[bm].remDone++;
+      var cd=saved.commitDate?normaliseDate(saved.commitDate):null;
+      if(cd&&cd<today)bmMap[bm].expired++;
+      if(saved.updatedAt&&saved.updatedAt>bmMap[bm].lastUpdate)bmMap[bm].lastUpdate=saved.updatedAt;
+    } else bmMap[bm].remPend++;
+  });
+  var bms=Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;});
+  var rows=bms.map(function(bm){
+    var s=bmMap[bm];
+    var pct=s.total>0?Math.round(s.remDone/s.total*100):0;
+    var expS=s.expired>0?'color:#c0392b;font-weight:700':'color:var(--text3)';
+    var pendS=s.remPend>0?'color:#c0392b;font-weight:700':'color:var(--text3)';
+    var lastUpd=s.lastUpdate?s.lastUpdate.substring(0,16):'—';
+    return '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:6px 10px;font-weight:600;padding-left:24px">'+esc(s.lbl)+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;font-family:var(--mono);font-weight:700">'+s.total+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:#c0392b">'+(s.p120||'—')+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:#c05621">'+(s.p90||'—')+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:#d97706">'+(s.p60||'—')+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:#926800">'+(s.p45||'—')+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:#1a7a3c">'+(s.p30||'—')+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:#0891b2">'+(s.p15||'—')+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;color:var(--green)">'+s.remDone+'<span style="font-size:10px;color:var(--text3)"> '+pct+'%</span></td>'+
+      '<td style="padding:6px 10px;text-align:center;'+pendS+'">'+s.remPend+'</td>'+
+      '<td style="padding:6px 10px;text-align:center;'+expS+'">'+s.expired+'</td>'+
+      '<td style="padding:6px 10px;font-size:10px;color:var(--text3)">'+lastUpd+'</td>'+
+      '</tr>';
+  }).join('');
+  var wrap=document.createElement('div');
+  wrap.style.cssText='padding:8px 0';
+  wrap.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;background:#fff">'+
+    '<thead><tr style="background:#e8f0fe">'+
+      '<th style="padding:6px 10px;text-align:left;padding-left:24px">BM Name</th>'+
+      '<th style="padding:6px 10px;text-align:center">Total</th>'+
+      '<th style="padding:6px 10px;text-align:center;color:#c0392b">120D+</th>'+
+      '<th style="padding:6px 10px;text-align:center;color:#c05621">90D+</th>'+
+      '<th style="padding:6px 10px;text-align:center;color:#d97706">60D+</th>'+
+      '<th style="padding:6px 10px;text-align:center;color:#926800">45D+</th>'+
+      '<th style="padding:6px 10px;text-align:center;color:#1a7a3c">30D+</th>'+
+      '<th style="padding:6px 10px;text-align:center;color:#0891b2">15D+</th>'+
+      '<th style="padding:6px 10px;text-align:center">Rem Done</th>'+
+      '<th style="padding:6px 10px;text-align:center;color:#c0392b">No Remark</th>'+
+      '<th style="padding:6px 10px;text-align:center;color:#c0392b">Expired</th>'+
+      '<th style="padding:6px 10px;text-align:left">Last Updated</th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '</table>';
   return wrap;
 }
 
@@ -2888,7 +3005,47 @@ function buildBMPendencySummary(){
 function filterRemindersByBM(bm){
   var sel=el('rem-bm-filter');
   if(!sel)return;
+
+  /* Toggle: click same BM again to show all */
+  if(sel.value===bm){
+    sel.value='';
+    buildBMPendencySummary(); /* restore full table */
+    renderReminders();
+    return;
+  }
+
   sel.value=bm;
+
+  /* Collapse BM summary to show only selected BM row */
+  var tbody=el('bm-pendency-body');
+  if(tbody){
+    var rows=tbody.querySelectorAll('tr');
+    rows.forEach(function(row){
+      var nameCell=row.cells&&row.cells[0];
+      if(!nameCell)return;
+      /* match by label text against bm email prefix */
+      var bmLbl=bm.indexOf('@')>-1?bm.split('@')[0].replace(/[._]/g,' '):bm;
+      var cellText=(nameCell.textContent||'').trim().toLowerCase();
+      row.style.display=(cellText===bmLbl.toLowerCase())?'':'none';
+    });
+    /* Add "Show All" button if not already there */
+    var card=el('bm-pendency-summary');
+    var existBtn=card?card.querySelector('#bm-show-all-btn'):null;
+    if(card&&!existBtn){
+      var btn=document.createElement('div');
+      btn.id='bm-show-all-btn';
+      btn.style.cssText='padding:6px 16px;background:var(--surface2);border-top:1px solid var(--border);text-align:center;font-size:12px;color:var(--primary);cursor:pointer;font-weight:600';
+      btn.textContent='↩ Show All BMs';
+      btn.onclick=function(){
+        sel.value='';
+        buildBMPendencySummary();
+        renderReminders();
+        this.remove();
+      };
+      card.appendChild(btn);
+    }
+  }
+
   renderReminders();
   /* Scroll to reminder buckets */
   var grid=el('reminder-day-grid');
