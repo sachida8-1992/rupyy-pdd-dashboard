@@ -464,7 +464,17 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
           </div>
         </div>
         <div class="top-channels-card" style="overflow-x:auto">
-          <div class="chart-title">BM-wise Pending &mdash; Cases &amp; Amount</div>
+          <div class="chart-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;justify-content:space-between">
+            <span>BM-wise Pending &mdash; Cases &amp; Amount</span>
+            <div id="bm-pending-filters" style="display:none;gap:6px;align-items:center;flex-wrap:wrap">
+              <select id="bm-am-sel" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text)" onchange="buildBMPendingTable()">
+                <option value="">All AMs</option>
+              </select>
+              <select id="bm-bm-sel" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text)" onchange="buildBMPendingTable()">
+                <option value="">All BMs</option>
+              </select>
+            </div>
+          </div>
           <table class="top-channels-table" id="bm-pending-table" style="font-size:11px;min-width:480px">
             <thead>
               <tr>
@@ -873,9 +883,63 @@ function mkCard(title,total,p120,p90,p60,selected){
 
 function buildBMPendingTable(){
   var tbody=el('bm-pending-body');if(!tbody)return;
-  var myData=getMyData();
+  var filterDiv=el('bm-pending-filters');
+  var isRH=(currentRole==='rh'||currentRole==='admin');
+
+  /* Show filter dropdowns for RH/Admin only */
+  if(filterDiv)filterDiv.style.display=isRH?'flex':'none';
+
+  var myData=filteredData.length?filteredData:getMyData();
+
+  /* Read filter selections */
+  var amSel=el('bm-am-sel');
+  var bmSel=el('bm-bm-sel');
+  var selAM=amSel?amSel.value:'';
+  var selBM=bmSel?bmSel.value:'';
+
+  /* Populate AM dropdown */
+  if(isRH&&amSel&&amSel.options.length<=1){
+    var amsSeen={};
+    getMyData().forEach(function(r){if(r._am)amsSeen[r._am]=true;});
+    Object.keys(amsSeen).sort().forEach(function(am){
+      var lbl=am.indexOf('@')>-1?am.split('@')[0]:am;
+      var opt=document.createElement('option');
+      opt.value=am;opt.textContent=lbl;
+      amSel.appendChild(opt);
+    });
+  }
+
+  /* Filter data by selected AM */
+  var baseData=myData;
+  if(selAM)baseData=baseData.filter(function(r){return r._am===selAM;});
+
+  /* Populate BM dropdown based on selected AM */
+  if(isRH&&bmSel){
+    var prevBM=bmSel.value;
+    while(bmSel.options.length>1)bmSel.remove(1);
+    var bmsSeen={};
+    baseData.forEach(function(r){if(r._bm)bmsSeen[r._bm]=true;});
+    Object.keys(bmsSeen).sort().forEach(function(bm){
+      var lbl=bm.indexOf('@')>-1?bm.split('@')[0].replace(/[._]/g,' '):bm;
+      var opt=document.createElement('option');
+      opt.value=bm;opt.textContent=lbl;
+      bmSel.appendChild(opt);
+    });
+    /* Restore selection if still valid */
+    if(prevBM&&bmsSeen[prevBM])bmSel.value=prevBM;
+    else bmSel.value='';
+    selBM=bmSel.value;
+  }
+
+  /* Filter by BM */
+  if(selBM)baseData=baseData.filter(function(r){return r._bm===selBM;});
+
+  /* Build BM map */
   var bmMap={};
-  myData.forEach(function(r){
+  baseData.forEach(function(r){
+    /* Only include cases with actual pendency (exclude No pending and blank) */
+    var pend=(r._pendency||'').trim();
+    if(!pend||pend==='No pending')return;
     var bm=r._bm||'Unassigned';
     var lbl=bm.indexOf('@')>-1?bm.split('@')[0].replace(/[._]/g,' '):bm;
     if(!bmMap[bm])bmMap[bm]={lbl:lbl,total:0,amt:0,p120:0,p90:0,p60:0,p45:0,p30:0};
@@ -889,6 +953,7 @@ function buildBMPendingTable(){
     else if(ag==='30 Days Above')bmMap[bm].p30++;
   });
   var bms=Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;});
+  if(!bms.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:10px">No data</td></tr>';return;}
   tbody.innerHTML=bms.map(function(bm){
     var m=bmMap[bm];
     var amtL=m.amt>=10000000?(m.amt/10000000).toFixed(2)+' Cr':(m.amt/100000).toFixed(2)+' L';
@@ -1297,7 +1362,10 @@ function applyFilters(){
   if(currentTab==='bank'){renderBankCharts(base);renderBankTable();}
 }
 function resetFilters(){
-  ['search-box','bank-search-filter','product-search-filter'].forEach(function(id){var e=el(id);if(e)e.value='';});
+  ['search-box','bank-search-filter','product-search-filter','bm-am-sel','bm-bm-sel'].forEach(function(id){var e=el(id);if(e)e.value='';});
+  /* Reset BM dropdown options except first */
+  var bmSel2=el('bm-bm-sel');if(bmSel2){while(bmSel2.options.length>1)bmSel2.remove(1);}
+  var amSel2=el('bm-am-sel');if(amSel2){while(amSel2.options.length>1)amSel2.remove(1);}
   var sf=el('state-filter');if(sf)sf.value='';
   activePills=[];activeAgeings=[];activeRBNR='';
   buildPills();buildAMAgeing();
