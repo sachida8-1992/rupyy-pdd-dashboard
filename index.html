@@ -1411,12 +1411,7 @@ function renderCasesCharts(data){
   /* ── Pendency × Ageing summary table ── */
   renderPendAgeTable(data);
   /* ── Top 5 Channels ── */
-  var chMap={};
-  data.forEach(function(r){var k=(r['DC ID']||'')+'||'+(r['Dealer Name']||'?');if(!chMap[k])chMap[k]={name:r['Dealer Name']||'Unknown',dcid:r['DC ID']||'',p120:0,p90:0,p60:0,total:0};chMap[k].total++;if(r['PDD Ageing (Days)']==AGEING_KEYS[0])chMap[k].p120++;if(r['PDD Ageing (Days)']==AGEING_KEYS[1])chMap[k].p90++;if(r['PDD Ageing (Days)']==AGEING_KEYS[2])chMap[k].p60++;});
-  var chs=Object.values(chMap).sort(function(a,b){return(b.p120+b.p90+b.p60)-(a.p120+a.p90+a.p60);}).slice(0,5);
-  var rk=['rank-1','rank-2','rank-3','rank-4','rank-5'];
-  chs.forEach(function(ch,i){var tr=document.createElement('tr');var nm=ch.name.length>22?ch.name.substring(0,22)+'..':ch.name;tr.innerHTML='<td><span class="rank-badge '+rk[i]+'">'+(i+1)+'</span><span class="channel-name" title="'+esc(ch.name)+'">'+esc(nm)+'</span></td><td style="font-size:11px;color:var(--text3);font-family:var(--mono)">'+esc(ch.dcid)+'</td><td><span class="count-pill cp120">'+ch.p120+'</span></td><td><span class="count-pill cp90">'+ch.p90+'</span></td><td><span class="count-pill cp60">'+ch.p60+'</span></td><td style="font-family:var(--mono);font-size:12px;font-weight:700">'+ch.total+'</td>';tbody.appendChild(tr);});
-  if(!chs.length)tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text3)">No data</td></tr>';
+
 }
 
 function togglePendAll(){
@@ -2077,7 +2072,7 @@ function fetchAndCacheAMRemarks(){
             amDisplay:  row['AM Display Name']||''
           };
         });
-        if(currentTab==='cases'){renderTable();if(currentRole==='rh'||currentRole==='am'||currentRole==='admin'){buildRBNRFilter();buildRBNRSummary();}}
+        if(currentTab==='cases'){renderTable();}
         if(currentTab==='reminders'){buildReminderFilters();renderReminderStats();renderReminders();}
       }
     }catch(e){}
