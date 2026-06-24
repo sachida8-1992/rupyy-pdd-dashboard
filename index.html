@@ -463,34 +463,26 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
             </div>
           </div>
         </div>
-        <div class="top-channels-card" style="overflow-x:auto">
-          <div class="chart-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;justify-content:space-between">
-            <span>BM-wise Pending &mdash; Cases &amp; Amount</span>
-            <div id="bm-pending-filters" style="display:none;gap:6px;align-items:center;flex-wrap:wrap">
-              <select id="bm-am-sel" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text)" onchange="buildBMPendingTable()">
-                <option value="">All AMs</option>
-              </select>
-              <select id="bm-bm-sel" style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text)" onchange="buildBMPendingTable()">
-                <option value="">All BMs</option>
-              </select>
-            </div>
-          </div>
-          <table class="top-channels-table" id="bm-pending-table" style="font-size:11px;min-width:480px">
+        <!-- AM-wise Summary — RH only -->
+        <div class="top-channels-card" id="am-summary-card" style="overflow-x:auto;display:none">
+          <div class="chart-title">AM-wise Summary</div>
+          <table class="top-channels-table" style="font-size:11px;min-width:440px">
             <thead>
               <tr>
-                <th style="text-align:left">BM Name</th>
+                <th style="text-align:left">AM Name</th>
                 <th>Total</th>
-                <th>Amt</th>
                 <th style="color:#c0392b">120D+</th>
                 <th style="color:#c05621">90D+</th>
                 <th style="color:#d97706">60D+</th>
                 <th style="color:#926800">45D+</th>
-                <th style="color:#1a7a3c">30D+</th>
+                <th>Amt</th>
               </tr>
             </thead>
-            <tbody id="bm-pending-body"></tbody>
+            <tbody id="am-summary-body"></tbody>
           </table>
         </div>
+
+        
       </div>
       <div id="am-ageing-filter" class="am-ageing-filter" style="display:none">
         <div class="am-ageing-filter-title">Filter by Ageing Bucket &mdash; select multiple</div>
@@ -881,96 +873,46 @@ function mkCard(title,total,p120,p90,p60,selected){
   return c;
 }
 
-function buildBMPendingTable(){
-  var tbody=el('bm-pending-body');if(!tbody)return;
-  var filterDiv=el('bm-pending-filters');
+function buildAMSummaryTable(){
+  var card=el('am-summary-card');
+  var tbody=el('am-summary-body');
+  if(!card||!tbody)return;
   var isRH=(currentRole==='rh'||currentRole==='admin');
-
-  /* Show filter dropdowns for RH/Admin only */
-  if(filterDiv)filterDiv.style.display=isRH?'flex':'none';
-
+  card.style.display=isRH?'block':'none';
+  if(!isRH)return;
   var myData=filteredData.length?filteredData:getMyData();
-
-  /* Read filter selections */
-  var amSel=el('bm-am-sel');
-  var bmSel=el('bm-bm-sel');
-  var selAM=amSel?amSel.value:'';
-  var selBM=bmSel?bmSel.value:'';
-
-  /* Populate AM dropdown */
-  if(isRH&&amSel&&amSel.options.length<=1){
-    var amsSeen={};
-    getMyData().forEach(function(r){if(r._am)amsSeen[r._am]=true;});
-    Object.keys(amsSeen).sort().forEach(function(am){
-      var lbl=am.indexOf('@')>-1?am.split('@')[0]:am;
-      var opt=document.createElement('option');
-      opt.value=am;opt.textContent=lbl;
-      amSel.appendChild(opt);
-    });
-  }
-
-  /* Filter data by selected AM */
-  var baseData=myData;
-  if(selAM)baseData=baseData.filter(function(r){return r._am===selAM;});
-
-  /* Populate BM dropdown based on selected AM */
-  if(isRH&&bmSel){
-    var prevBM=bmSel.value;
-    while(bmSel.options.length>1)bmSel.remove(1);
-    var bmsSeen={};
-    baseData.forEach(function(r){if(r._bm)bmsSeen[r._bm]=true;});
-    Object.keys(bmsSeen).sort().forEach(function(bm){
-      var lbl=bm.indexOf('@')>-1?bm.split('@')[0].replace(/[._]/g,' '):bm;
-      var opt=document.createElement('option');
-      opt.value=bm;opt.textContent=lbl;
-      bmSel.appendChild(opt);
-    });
-    /* Restore selection if still valid */
-    if(prevBM&&bmsSeen[prevBM])bmSel.value=prevBM;
-    else bmSel.value='';
-    selBM=bmSel.value;
-  }
-
-  /* Filter by BM */
-  if(selBM)baseData=baseData.filter(function(r){return r._bm===selBM;});
-
-  /* Build BM map */
-  var bmMap={};
-  baseData.forEach(function(r){
-    /* Only include cases with actual pendency (exclude No pending and blank) */
+  var amMap={};
+  myData.forEach(function(r){
     var pend=(r._pendency||'').trim();
     if(!pend||pend==='No pending')return;
-    var bm=r._bm||'Unassigned';
-    var lbl=bm.indexOf('@')>-1?bm.split('@')[0].replace(/[._]/g,' '):bm;
-    if(!bmMap[bm])bmMap[bm]={lbl:lbl,total:0,amt:0,p120:0,p90:0,p60:0,p45:0,p30:0};
-    bmMap[bm].total++;
-    bmMap[bm].amt+=(parseFloat(r['Disbursed Amount'])||0);
+    var am=r._am||'Unassigned';
+    var lbl=am.indexOf('@')>-1?am.split('@')[0]:am;
+    if(!amMap[am])amMap[am]={lbl:lbl,total:0,amt:0,p120:0,p90:0,p60:0,p45:0};
+    amMap[am].total++;
+    amMap[am].amt+=(parseFloat(r['Disbursed Amount'])||0);
     var ag=r['PDD Ageing (Days)']||'';
-    if(ag==='120 Days Above')bmMap[bm].p120++;
-    else if(ag==='90 Days Above')bmMap[bm].p90++;
-    else if(ag==='60 Days Above')bmMap[bm].p60++;
-    else if(ag==='45 Days Above')bmMap[bm].p45++;
-    else if(ag==='30 Days Above')bmMap[bm].p30++;
+    if(ag==='120 Days Above')amMap[am].p120++;
+    else if(ag==='90 Days Above')amMap[am].p90++;
+    else if(ag==='60 Days Above')amMap[am].p60++;
+    else if(ag==='45 Days Above')amMap[am].p45++;
   });
-  var bms=Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;});
-  if(!bms.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:10px">No data</td></tr>';return;}
-  tbody.innerHTML=bms.map(function(bm){
-    var m=bmMap[bm];
+  var ams=Object.keys(amMap).sort(function(a,b){return amMap[b].total-amMap[a].total;});
+  if(!ams.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:10px">No data</td></tr>';return;}
+  tbody.innerHTML=ams.map(function(am){
+    var m=amMap[am];
     var amtL=m.amt>=10000000?(m.amt/10000000).toFixed(2)+' Cr':(m.amt/100000).toFixed(2)+' L';
     return '<tr>'+
       '<td style="text-align:left;font-weight:600">'+esc(m.lbl)+'</td>'+
       '<td>'+m.total+'</td>'+
+      '<td style="color:#c0392b">'+(m.p120||'&#8212;')+'</td>'+
+      '<td style="color:#c05621">'+(m.p90||'&#8212;')+'</td>'+
+      '<td style="color:#d97706">'+(m.p60||'&#8212;')+'</td>'+
+      '<td style="color:#926800">'+(m.p45||'&#8212;')+'</td>'+
       '<td style="font-family:var(--mono);font-size:10px">'+amtL+'</td>'+
-      '<td style="color:#c0392b">'+(m.p120||'—')+'</td>'+
-      '<td style="color:#c05621">'+(m.p90||'—')+'</td>'+
-      '<td style="color:#d97706">'+(m.p60||'—')+'</td>'+
-      '<td style="color:#926800">'+(m.p45||'—')+'</td>'+
-      '<td style="color:#1a7a3c">'+(m.p30||'—')+'</td>'+
       '</tr>';
   }).join('');
 }
 
-/* ===== SPAN VIEWS ===== */
 function buildSpanView(){
   var container=el('span-container');if(!container)return;container.innerHTML='';
   if(currentRole==='admin'||currentRole==='rh') buildAdminRHSpan(container);
@@ -1357,15 +1299,12 @@ function applyFilters(){
   if(activePills.length>0)base=base.filter(function(r){return activePills.indexOf(r._pendency)>-1;});
 
   filteredData=base;sortData();
-  buildBMPendingTable();
+  buildAMSummaryTable();
   renderKPIs(base);renderAgeingBar(base);renderCasesCharts(base);renderTable();
   if(currentTab==='bank'){renderBankCharts(base);renderBankTable();}
 }
 function resetFilters(){
-  ['search-box','bank-search-filter','product-search-filter','bm-am-sel','bm-bm-sel'].forEach(function(id){var e=el(id);if(e)e.value='';});
-  /* Reset BM dropdown options except first */
-  var bmSel2=el('bm-bm-sel');if(bmSel2){while(bmSel2.options.length>1)bmSel2.remove(1);}
-  var amSel2=el('bm-am-sel');if(amSel2){while(amSel2.options.length>1)amSel2.remove(1);}
+  ['search-box','bank-search-filter','product-search-filter'].forEach(function(id){var e=el(id);if(e)e.value='';});
   var sf=el('state-filter');if(sf)sf.value='';
   activePills=[];activeAgeings=[];activeRBNR='';
   buildPills();buildAMAgeing();
