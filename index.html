@@ -387,6 +387,7 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
     <div class="header-right">
       <button class="upload-link-btn" id="upload-link-btn" onclick="openUpload()" style="display:none">&#8679; Upload Data</button>
       <button class="upload-link-btn" id="mail-bm-btn" onclick="openMailModal()" style="display:none;background:#1a7a3c">&#9993; Mail BMs</button>
+      <button class="upload-link-btn" id="mail-am-btn" onclick="openMailAMModal()" style="display:none;background:#1a5cb4">&#9993; Mail AMs</button>
       <button class="upload-link-btn" id="rbnr-alert-btn" onclick="sendRBNRAlertFromDashboard()" style="display:none;background:#7c3aed">&#128680; RBNR Alerts</button>
       <div class="user-chip">
         <div class="user-avatar" id="hdr-avatar">A</div>
@@ -618,6 +619,28 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
   </div>
 </div>
 
+<!-- MAIL AM MODAL -->
+<div class="modal-overlay" id="mail-am-modal" style="display:none" onclick="if(event.target===this)closeMailAMModal()">
+  <div style="background:#fff;border-radius:10px;max-width:520px;margin:40px auto;padding:24px;position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:700;color:var(--primary)">&#9993; Send Daily Pendency Email to AMs</div>
+      <button onclick="closeMailAMModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">&#10005;</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">To: AM &nbsp;|&nbsp; CC: RH &nbsp;|&nbsp; Sends 60D+ cases per AM</div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px">Select AMs:</div>
+    <div id="am-email-checkboxes" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button class="reset-btn" onclick="mailAMSelectAll(true)">All</button>
+      <button class="reset-btn" onclick="mailAMSelectAll(false)">None</button>
+    </div>
+    <div id="am-email-status" style="font-size:12px;color:var(--text3);min-height:18px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="reset-btn" onclick="closeMailAMModal()">Cancel</button>
+      <button class="bm-save-btn" id="send-am-emails-btn" onclick="sendAMEmails()" style="background:#1a5cb4;padding:8px 20px">&#9993; Send Emails</button>
+    </div>
+  </div>
+</div>
+
 <!-- MAIL BM MODAL -->
 <div class="modal-overlay" id="mail-modal" onclick="if(event.target===this)closeMailModal()">
   <div class="modal-box" style="max-width:680px">
@@ -797,6 +820,7 @@ function doLogin(){
   var rt=el('hdr-role-tag');rt.textContent=role.toUpperCase();rt.className='user-role-tag role-'+role;
   el('upload-link-btn').style.display=role==='admin'?'inline-block':'none';
   el('mail-bm-btn').style.display=(role==='rh'||role==='admin')?'inline-block':'none';
+  el('mail-am-btn').style.display=(role==='rh'||role==='admin')?'inline-block':'none';
   el('rbnr-alert-btn').style.display=(role==='rh'||role==='admin')?'inline-block':'none';
   buildPills();buildStateFilter();buildBankAMFilter();
   var sb=el('search-box');if(sb)sb.value='';
@@ -1681,6 +1705,101 @@ function parseCSV(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var
    BM MAIL — RH sends pendency reminders BM-wise
    Uses Apps Script action=send_bm_emails (POST)
    ====================================================== */
+
+function openMailAMModal(){
+  var modal=el('mail-am-modal');
+  var wrap=el('am-email-checkboxes');
+  if(!modal||!wrap)return;
+  /* Populate AM checkboxes with 60D+ case counts */
+  var myData=getMyData();
+  var amMap={};
+  myData.forEach(function(r){
+    var pend=(r._pendency||'').trim();
+    if(!pend||pend==='No pending')return;
+    var ag=r['PDD Ageing (Days)']||'';
+    if(ag!=='60 Days Above'&&ag!=='90 Days Above'&&ag!=='120 Days Above')return;
+    var am=r._am||'';if(!am)return;
+    if(!amMap[am])amMap[am]=0;
+    amMap[am]++;
+  });
+  wrap.innerHTML='';
+  Object.keys(amMap).sort().forEach(function(am){
+    var lbl=am.split('@')[0];
+    var cnt=amMap[am];
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 4px;border-bottom:1px solid var(--border)';
+    row.innerHTML='<input type="checkbox" class="am-chk" value="'+esc(am)+'" checked style="accent-color:#1a5cb4">'+
+      '<span style="flex:1;font-size:12px">'+esc(lbl)+'</span>'+
+      '<span style="font-size:11px;color:var(--accent);font-weight:700;font-family:var(--mono)">'+cnt+' cases</span>';
+    wrap.appendChild(row);
+  });
+  el('am-email-status').textContent='';
+  modal.style.display='block';
+}
+
+function closeMailAMModal(){var m=el('mail-am-modal');if(m)m.style.display='none';}
+
+function mailAMSelectAll(sel){document.querySelectorAll('.am-chk').forEach(function(c){c.checked=sel;});}
+
+function sendAMEmails(){
+  var btn=el('send-am-emails-btn');
+  var status=el('am-email-status');
+  var selected=[];
+  document.querySelectorAll('.am-chk:checked').forEach(function(c){selected.push(c.value);});
+  if(!selected.length){if(status)status.textContent='Please select at least one AM.';return;}
+  if(btn){btn.textContent='Sending…';btn.disabled=true;}
+  if(status)status.textContent='Sending to '+selected.length+' AM(s)…';
+
+  var myData=getMyData();
+  var amIdx=0;
+
+  function sendNextAM(){
+    if(amIdx>=selected.length){
+      if(btn){btn.textContent='✓ Sent!';btn.disabled=false;btn.style.background='#1a7a3c';}
+      if(status)status.textContent='Emails sent to '+selected.length+' AM(s). Check Email Log in sheet.';
+      setTimeout(function(){closeMailAMModal();btn.textContent='✉ Send Emails';btn.style.background='#1a5cb4';},3000);
+      return;
+    }
+    var amEmail=selected[amIdx]; amIdx++;
+    if(status)status.textContent='Sending '+amIdx+' of '+selected.length+': '+amEmail.split('@')[0]+'…';
+
+    /* Build 60D+ cases for this AM */
+    var amCases=myData.filter(function(r){
+      var pend=(r._pendency||'').trim();
+      if(!pend||pend==='No pending')return false;
+      var ag=r['PDD Ageing (Days)']||'';
+      return r._am===amEmail&&(ag==='60 Days Above'||ag==='90 Days Above'||ag==='120 Days Above');
+    });
+
+    var payload=JSON.stringify({
+      action:'send_am_email',
+      amEmail:amEmail,
+      rhEmail:'sachidananda.panigrahy@rupyy.com',
+      cases:amCases.map(function(r){
+        var lid=String(r['Loan ID']||'').trim();
+        var saved=_remarksCache[lid]||null;
+        return {
+          i:(r['Loan ID']||'').substring(0,12),
+          c:(r['Customer Name']||'').substring(0,18),
+          bm:(r['BM name']||r._bm||'').split('@')[0].replace(/[._]/g,' '),
+          d:(r['Dealer Name']||'').substring(0,18),
+          a:r['PDD Ageing (Days)']||'',
+          p:(r._pendency||'').substring(0,25),
+          m:r._amt||0,
+          brem:saved?(saved.remark||'').substring(0,60):''
+        };
+      })
+    });
+
+    var url=GAS_URL+'?action=send_am_email&batchData='+encodeURIComponent(payload);
+    var xhr=new XMLHttpRequest();
+    xhr.open('GET',url,true);
+    xhr.onload=function(){setTimeout(sendNextAM,600);};
+    xhr.onerror=function(){setTimeout(sendNextAM,600);};
+    xhr.send();
+  }
+  sendNextAM();
+}
 
 function openMailModal(){
   /* Get all pending cases in RH scope */
