@@ -1791,9 +1791,9 @@ function sendAMEmails(){
       })
     });
 
-    var url=GAS_URL+'?action=send_am_email&batchData='+encodeURIComponent(payload);
+    var url=GAS_URL+'?action=send_am_email';
     var xhr=new XMLHttpRequest();
-    xhr.open('GET',url,true);
+    xhr.open('GET',url+'&batchData='+encodeURIComponent(payload),true);
     xhr.onload=function(){setTimeout(sendNextAM,600);};
     xhr.onerror=function(){setTimeout(sendNextAM,600);};
     xhr.send();
