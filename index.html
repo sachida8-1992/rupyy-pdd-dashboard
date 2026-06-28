@@ -464,6 +464,24 @@ table.main-tbl tbody td{padding:9px 11px;font-size:12px;vertical-align:middle}
             </div>
           </div>
         </div>
+        <!-- BM Pending Summary — AM role -->
+        <div class="top-channels-card" id="bm-am-summary-card" style="overflow-x:auto;display:none">
+          <div class="chart-title">BM-wise Pending</div>
+          <table class="top-channels-table" style="font-size:11px;min-width:320px">
+            <thead>
+              <tr>
+                <th style="text-align:left">BM Name</th>
+                <th>Total</th>
+                <th style="color:#c0392b">120D+</th>
+                <th style="color:#c05621">90D+</th>
+                <th style="color:#d97706">60D+</th>
+                <th style="color:#926800">45D+</th>
+              </tr>
+            </thead>
+            <tbody id="bm-am-summary-body"></tbody>
+          </table>
+        </div>
+
         <!-- AM-wise Summary — RH only -->
         <div class="top-channels-card" id="am-summary-card" style="overflow-x:auto;display:none">
           <div class="chart-title">AM-wise Summary</div>
@@ -897,6 +915,48 @@ function mkCard(title,total,p120,p90,p60,selected){
   return c;
 }
 
+function buildBMAMSummaryTable(){
+  var card=el('bm-am-summary-card');
+  var tbody=el('bm-am-summary-body');
+  if(!card||!tbody)return;
+  /* Show only for AM role */
+  var isAM=(currentRole==='am');
+  card.style.display=isAM?'block':'none';
+  if(!isAM)return;
+
+  var myData=filteredData.length?filteredData:getMyData();
+  var bmMap={};
+  myData.forEach(function(r){
+    var pend=(r._pendency||'').trim();
+    if(!pend||pend==='No pending')return;
+    var bm=r._bm||'Unassigned';
+    var lbl=bm.indexOf('@')>-1?bm.split('@')[0].replace(/[._]/g,' '):bm;
+    if(!bmMap[bm])bmMap[bm]={lbl:lbl,total:0,p120:0,p90:0,p60:0,p45:0};
+    bmMap[bm].total++;
+    var ag=r['PDD Ageing (Days)']||'';
+    if(ag==='120 Days Above')bmMap[bm].p120++;
+    else if(ag==='90 Days Above')bmMap[bm].p90++;
+    else if(ag==='60 Days Above')bmMap[bm].p60++;
+    else if(ag==='45 Days Above')bmMap[bm].p45++;
+  });
+  var bms=Object.keys(bmMap).sort(function(a,b){return bmMap[b].total-bmMap[a].total;});
+  if(!bms.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:10px">No pending cases</td></tr>';
+    return;
+  }
+  tbody.innerHTML=bms.map(function(bm){
+    var m=bmMap[bm];
+    return '<tr>'+
+      '<td style="text-align:left;font-weight:600">'+esc(m.lbl)+'</td>'+
+      '<td>'+m.total+'</td>'+
+      '<td style="color:#c0392b">'+(m.p120||'&#8212;')+'</td>'+
+      '<td style="color:#c05621">'+(m.p90||'&#8212;')+'</td>'+
+      '<td style="color:#d97706">'+(m.p60||'&#8212;')+'</td>'+
+      '<td style="color:#926800">'+(m.p45||'&#8212;')+'</td>'+
+      '</tr>';
+  }).join('');
+}
+
 function buildAMSummaryTable(){
   var card=el('am-summary-card');
   var tbody=el('am-summary-body');
@@ -1323,6 +1383,7 @@ function applyFilters(){
   if(activePills.length>0)base=base.filter(function(r){return activePills.indexOf(r._pendency)>-1;});
 
   filteredData=base;sortData();
+  buildBMAMSummaryTable();
   buildAMSummaryTable();
   renderKPIs(base);renderAgeingBar(base);renderCasesCharts(base);renderTable();
   if(currentTab==='bank'){renderBankCharts(base);renderBankTable();}
