@@ -1778,6 +1778,7 @@ function sendAMEmails(){
       cases:amCases.map(function(r){
         var lid=String(r['Loan ID']||'').trim();
         var saved=_remarksCache[lid]||null;
+        var amSaved=_amRemarksCache[lid]||null;
         return {
           i:(r['Loan ID']||'').substring(0,12),
           c:(r['Customer Name']||'').substring(0,18),
@@ -1786,7 +1787,8 @@ function sendAMEmails(){
           a:r['PDD Ageing (Days)']||'',
           p:(r._pendency||'').substring(0,25),
           m:r._amt||0,
-          brem:saved?(saved.remark||'').substring(0,60):''
+          arem:amSaved?(amSaved.remark||'').substring(0,80):'',
+          acd:amSaved?normaliseDate(amSaved.commitDate)||'':''
         };
       })
     });
