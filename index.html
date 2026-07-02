@@ -2069,20 +2069,15 @@ function sendBMEmails(){
       rh:'sachidananda.panigrahy@rupyy.com',
       bms:[entry]
     });
-    var getUrl = GAS_URL+'?action=send_bm_emails&batchData='+encodeURIComponent(payload);
-    console.log('[MAIL] Sending to GAS:', getUrl.substring(0, 150));
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', getUrl, true);
-    xhr.onload = function(){
-      /* Continue regardless of response — keep sending remaining BMs */
-      sendOneBM();
-    };
+    xhr.open('POST', GAS_URL, true);
+    xhr.setRequestHeader('Content-Type','text/plain');
+    xhr.onload = function(){ sendOneBM(); };
     xhr.onerror = function(){
-      /* On network error, still try next BM */
       console.warn('Network error for BM: '+entry.bm);
       sendOneBM();
     };
-    xhr.send();
+    xhr.send(payload);
   }
 
   sendOneBM();
