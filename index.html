@@ -2057,9 +2057,8 @@ function sendBMEmails(){
           lt: (r['Loan Type']||'').substring(0,15),
           brem: (function(){var s=_remarksCache[String(r['Loan ID']||'').trim()];return s?s.remark.substring(0,60):'';})(),
           bcd:  (function(){var s=_remarksCache[String(r['Loan ID']||'').trim()];return s?normaliseDate(s.commitDate):'';})(),
-          rtor: (r._pendency?'':(r['Latest RTO Ops Remarks']||r['Rto ops remark']||'').substring(0,80)),
-          amrk: (function(){var s=_amRemarksCache[String(r['Loan ID']||'').trim()];return s?(s.remark||'').replace(/^\[RBNR:[^\]]+\]\s*/,'').substring(0,80):'';})(),
-          rtor: (r._pendency?'':(r['Latest RTO Ops Remarks']||r['Rto ops remark']||'').substring(0,80))
+          rtor: (r['Latest RTO Ops Remarks']||r['Rto ops remark']||'').substring(0,80),
+          rtor: (r['Latest RTO Ops Remarks']||r['Rto ops remark']||'').substring(0,80)
         };
       })
     };
